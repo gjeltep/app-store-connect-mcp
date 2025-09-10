@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "app-store-connect": {
+      "command": "uv",
+      "args": [
+        "run",
+        "app-store-connect-mcp"
+      ]
+    }
+  }
+}

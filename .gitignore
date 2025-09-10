@@ -1,0 +1,22 @@
+# Environment variables
+.env
+!.env.example
+
+# App Store Connect API keys
+*.p8
+
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+app_store_connect_api_openapi.json
+src/app_store_connect_mcp/models/
+
+# Virtual environments
+.venv
+
+# OS files
+.DS_Store
