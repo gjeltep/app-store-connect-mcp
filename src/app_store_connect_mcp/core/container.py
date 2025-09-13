@@ -1,9 +1,13 @@
 """Dependency injection container for the MCP server."""
 
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from app_store_connect_mcp.core.protocols import APIClient, DomainHandler
 from app_store_connect_mcp.clients.app_store_connect import AppStoreConnectAPI
 from app_store_connect_mcp.domains.testflight import TestFlightHandler
+from app_store_connect_mcp.domains.app import AppHandler
+
+if TYPE_CHECKING:
+    from mcp.server.fastmcp import FastMCP
 
 
 class Container:
@@ -25,9 +29,21 @@ class Container:
             api = self.get_api_client()
             self._domain_handlers = [
                 TestFlightHandler(api),
-                # Add new domain handlers here
+                AppHandler(api),
             ]
         return self._domain_handlers
+
+    def register_all_tools(self, mcp: "FastMCP") -> None:
+        """Register all domain tools with the FastMCP server.
+
+        This method iterates through all domain handlers and calls their
+        register_tools method to register their tools with the MCP server.
+
+        Args:
+            mcp: The FastMCP server instance to register tools with
+        """
+        for handler in self.get_domain_handlers():
+            handler.register_tools(mcp)
 
     async def cleanup(self) -> None:
         """Clean up resources."""

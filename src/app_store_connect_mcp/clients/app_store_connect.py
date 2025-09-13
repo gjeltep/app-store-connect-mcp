@@ -168,11 +168,32 @@ class AppStoreConnectAPI(BaseHTTPClient, PaginationMixin, APIClient):
         """Default app ID for operations."""
         return self._default_app_id
 
+    def ensure_app_id(self, app_id: Optional[str]) -> str:
+        """Ensure we have a valid app_id, using the default if needed.
+
+        Args:
+            app_id: The provided app_id or None
+
+        Returns:
+            The app_id to use
+
+        Raises:
+            ValidationError: If no app_id is provided and no default is set
+        """
+        from app_store_connect_mcp.core.errors import ValidationError
+
+        app_id = app_id or self._default_app_id
+        if not app_id:
+            raise ValidationError(
+                "app_id is required",
+                user_message="Please provide an app_id or set APP_STORE_APP_ID environment variable",
+                details={"missing_field": "app_id"},
+            )
+        return app_id
+
     async def get_url(self, url: str) -> Dict[str, Any]:
         """Get a specific URL (for pagination links)."""
         return await self._execute_request("GET", url)
-
-    # get_all_pages is provided by PaginationMixin
 
     async def _execute_request(
         self,
