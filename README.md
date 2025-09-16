@@ -5,6 +5,7 @@ Talk to App Store Connect about your app. Modular tools, async I/O, and OpenAPI�
 ### Why this is different
 - **Spec‑aware**: Fields and enums are derived from Apple’s OpenAPI spec at runtime, reducing drift and surprise breakage.
 - **Fast by default**: Async `httpx` client, server‑side filtering, and smart pagination to keep payloads lean.
+- **Smart filtering**: Server‑side + client‑side filtering with chainable filter engine for complex queries.
 - **Modular domains**: Clean separation of tool schemas and handlers; add new domains without touching the core.
 - **MCP‑native**: Stdio transport, capability declarations, and tool wiring align with the official SDK [python‑sdk README](https://github.com/modelcontextprotocol/python-sdk?tab=readme-ov-file).
 
@@ -46,6 +47,11 @@ python scripts/generate_models.py
 
 Tools use a resource-first naming convention (`resource.verb`) with category tags for discoverability.
 
+#### App Tools
+- **reviews.list**: List customer reviews with filters (`rating`, `territory`, `appStoreVersion`).
+- **reviews.search**: Advanced search with rating ranges, territory matching, date windows, and content search.
+- **reviews.get**: Get detailed review information.
+
 #### TestFlight Tools
 - **crashes.list**: List crash submissions from beta testers with filters (`device_model`, `os_version`, `app_platform`, `device_platform`, `build_id`, `tester_id`).
 - **crashes.search**: Advanced search with:
@@ -58,16 +64,20 @@ Tools use a resource-first naming convention (`resource.verb`) with category tag
 - `src/app_store_connect_mcp/server.py`: MCP stdio server entrypoint
 - `src/app_store_connect_mcp/core/`: Core architectural components
   - `protocols.py`: Abstract interfaces (APIClient, DomainHandler)
+  - `base_handler.py`: Abstract base class for domain handlers
+  - `query_builder.py`: Fluent API query construction with pagination
+  - `filters.py`: Chainable post‑processing filter engine
+  - `response_handler.py`: Standardized API response processing
   - `container.py`: Dependency injection container
   - `errors.py`: Structured error handling
 - `src/app_store_connect_mcp/clients/`: API client implementations
   - `app_store_connect.py`: Async App Store Connect client with JWT auth
   - `http_client.py`: Base HTTP client with error handling
-- `src/app_store_connect_mcp/domains/testflight/`: TestFlight domain
-  - `schemas.py`: JSON schemas for tools
-  - `handlers.py`: async logic, pagination, filtering
-- `src/app_store_connect_mcp/models/app_store_connect_models.py`: Auto-generated Pydantic v2 models from OpenAPI spec
-- `scripts/generate_models.py`: Fetches Apple's OpenAPI spec and generates type-safe models
+- `src/app_store_connect_mcp/domains/`: Domain‑specific implementations
+  - `testflight/handlers.py`: TestFlight crash management tools
+  - `app/handlers.py`: App Store review management tools
+- `src/app_store_connect_mcp/models/app_store_connect_models.py`: Auto‑generated Pydantic v2 models from OpenAPI spec
+- `scripts/generate_models.py`: Fetches Apple's OpenAPI spec and generates type‑safe models
 - `app_store_connect_api_openapi.json`: Apple's OpenAPI spec (checked in for reliability)
 
 ### Credits
