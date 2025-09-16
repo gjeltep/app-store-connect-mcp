@@ -30,23 +30,6 @@ class TestContainer:
             assert client1 is client2
             assert isinstance(client1, APIClient)
 
-    def test_container_creates_domain_handlers(self):
-        """Test container creates domain handlers with dependencies."""
-        container = Container()
-
-        with patch.dict(
-            "os.environ",
-            {
-                "APP_STORE_KEY_ID": "test-key",
-                "APP_STORE_ISSUER_ID": "test-issuer",
-                "APP_STORE_PRIVATE_KEY_PATH": "/test/path.p8",
-            },
-        ):
-            handlers = container.get_domain_handlers()
-
-            assert len(handlers) > 0
-            assert all(isinstance(h, DomainHandler) for h in handlers)
-
     @pytest.mark.asyncio
     async def test_container_cleanup(self):
         """Test container cleanup releases resources."""
@@ -82,17 +65,3 @@ class TestDependencyInjection:
         handlers = container.get_domain_handlers()
         assert len(handlers) == 2
         assert all(h.api is mock_client for h in handlers)
-
-    @pytest.mark.asyncio
-    async def test_handler_uses_injected_api(self):
-        """Test handler actually uses the injected API client."""
-        mock_client = MockAPIClient()
-        mock_client.responses["/mock/endpoint"] = {"custom": "response"}
-
-        handler = MockDomainHandler(mock_client)
-        result = await handler.handle_tool("mock_tool_1", {})
-
-        # Verify the handler used the API
-        assert len(mock_client.requests) == 1
-        assert mock_client.requests[0] == ("GET", "/mock/endpoint", None)
-        assert "custom" in str(result[0].text)

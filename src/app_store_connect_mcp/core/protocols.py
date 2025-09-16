@@ -1,9 +1,12 @@
 """Abstract base classes for dependency inversion."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, List
-from mcp.types import Tool, TextContent
+from typing import Dict, Any, Optional, List, TYPE_CHECKING
 from app_store_connect_mcp.core.constants import APP_STORE_CONNECT_MAX_PAGE_SIZE
+
+# Avoid circular import - FastMCP only needed for type hints, not runtime
+if TYPE_CHECKING:
+    from mcp.server.fastmcp import FastMCP
 
 
 class APIClient(ABC):
@@ -51,6 +54,21 @@ class APIClient(ABC):
         pass
 
     @abstractmethod
+    def ensure_app_id(self, app_id: Optional[str]) -> str:
+        """Ensure we have a valid app_id, using the default if needed.
+
+        Args:
+            app_id: The provided app_id or None
+
+        Returns:
+            The app_id to use
+
+        Raises:
+            ValidationError: If no app_id is provided and no default is set
+        """
+        pass
+
+    @abstractmethod
     async def aclose(self) -> None:
         """Close the client connection."""
         pass
@@ -59,17 +77,16 @@ class APIClient(ABC):
 class DomainHandler(ABC):
     """Abstract domain handler interface."""
 
-    @staticmethod
     @abstractmethod
-    def get_tools() -> List[Tool]:
-        """Get list of tools this domain provides."""
-        pass
+    def register_tools(self, mcp: "FastMCP") -> None:
+        """Register all tools for this domain with the FastMCP server.
 
-    @abstractmethod
-    async def handle_tool(
-        self, name: str, arguments: Dict[str, Any]
-    ) -> List[TextContent]:
-        """Handle a tool invocation."""
+        This method should use @mcp.tool() decorator to register each tool
+        function that belongs to this domain.
+
+        Args:
+            mcp: The FastMCP server instance to register tools with
+        """
         pass
 
     @staticmethod

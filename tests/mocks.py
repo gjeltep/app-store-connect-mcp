@@ -1,7 +1,6 @@
 """Mock implementations for testing SOLID architecture."""
 
 from typing import Dict, Any, Optional, List
-from mcp.types import Tool, TextContent
 from app_store_connect_mcp.core.protocols import APIClient, DomainHandler
 
 
@@ -53,6 +52,19 @@ class MockAPIClient(APIClient):
         """Mock default app ID."""
         return self._default_app_id
 
+    def ensure_app_id(self, app_id: Optional[str]) -> str:
+        """Mock ensure_app_id method."""
+        from app_store_connect_mcp.core.errors import ValidationError
+
+        app_id = app_id or self._default_app_id
+        if not app_id:
+            raise ValidationError(
+                "app_id is required",
+                user_message="Please provide an app_id",
+                details={"missing_field": "app_id"},
+            )
+        return app_id
+
     async def aclose(self) -> None:
         """Mock close."""
         self.is_closed = True
@@ -64,38 +76,17 @@ class MockDomainHandler(DomainHandler):
     def __init__(self, api: APIClient, name: str = "mock"):
         self.api = api
         self.name = name
-        self.handled_tools = []
+        self.registered = False
+
+    def register_tools(self, mcp) -> None:
+        """Mock register_tools implementation."""
+        # For testing, we just track that registration was called
+        self.registered = True
 
     @staticmethod
-    def get_tools() -> List[Tool]:
-        """Return mock tools."""
-        return [
-            Tool(
-                name="mock_tool_1",
-                description="First mock tool",
-                inputSchema={"type": "object", "properties": {}},
-            ),
-            Tool(
-                name="mock_tool_2",
-                description="Second mock tool",
-                inputSchema={"type": "object", "properties": {}},
-            ),
-        ]
-
-    async def handle_tool(
-        self, name: str, arguments: Dict[str, Any]
-    ) -> List[TextContent]:
-        """Handle mock tool invocation."""
-        self.handled_tools.append((name, arguments))
-
-        if name == "mock_tool_1":
-            # Demonstrate API usage
-            result = await self.api.get("/mock/endpoint")
-            return [TextContent(type="text", text=f"Mock result: {result}")]
-        elif name == "mock_tool_2":
-            return [TextContent(type="text", text="Mock tool 2 executed")]
-        else:
-            raise ValueError(f"Unknown tool: {name}")
+    def get_category() -> str:
+        """Get the category name."""
+        return "Mock"
 
 
 class FailingAPIClient(APIClient):
@@ -132,6 +123,10 @@ class FailingAPIClient(APIClient):
     @property
     def default_app_id(self) -> Optional[str]:
         return None
+
+    def ensure_app_id(self, app_id: Optional[str]) -> str:
+        """Mock ensure_app_id that always fails."""
+        raise Exception(self.error_message)
 
     async def aclose(self) -> None:
         pass
