@@ -60,6 +60,17 @@ Tools use a resource-first naming convention (`resource.verb`) with category tag
 - **crashes.get_by_id**: Get detailed information about a specific crash submission.
 - **crashes.get_log**: Retrieve the raw crash log text for a specific submission.
 
+#### Analytics Tools
+- **apps.list_analytics_report_requests**: List analytics report requests for an app with filters (`access_type`).
+- **report_requests.create**: Create new analytics report requests for specific metrics and timeframes.
+- **report_requests.get**: Get detailed information about a specific analytics report request.
+- **report_requests.list_reports**: List available reports within a request with filters (`name`, `category`).
+- **reports.get**: Get specific analytics report information.
+- **reports.list_instances**: List report instances with filters (`granularity`, `processing_date`).
+- **report_instances.get**: Get detailed information about a specific report instance.
+- **report_instances.list_segments**: List data segments for a report instance.
+- **report_segments.get**: Get segment download information (checksum, URL, size).
+
 ### Architecture
 - `src/app_store_connect_mcp/server.py`: MCP stdio server entrypoint
 - `src/app_store_connect_mcp/core/`: Core architectural components
@@ -76,6 +87,7 @@ Tools use a resource-first naming convention (`resource.verb`) with category tag
 - `src/app_store_connect_mcp/domains/`: Domain‑specific implementations
   - `testflight/handlers.py`: TestFlight crash management tools
   - `app/handlers.py`: App Store review management tools
+  - `analytics/handlers.py`: Analytics report management tools
 - `src/app_store_connect_mcp/models/app_store_connect_models.py`: Auto‑generated Pydantic v2 models from OpenAPI spec
 - `scripts/generate_models.py`: Fetches Apple's OpenAPI spec and generates type‑safe models
 - `app_store_connect_api_openapi.json`: Apple's OpenAPI spec (checked in for reliability)

@@ -5,6 +5,7 @@ from app_store_connect_mcp.core.protocols import APIClient, DomainHandler
 from app_store_connect_mcp.clients.app_store_connect import AppStoreConnectAPI
 from app_store_connect_mcp.domains.testflight import TestFlightHandler
 from app_store_connect_mcp.domains.app import AppHandler
+from app_store_connect_mcp.domains.analytics import AnalyticsHandler
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -30,6 +31,7 @@ class Container:
             self._domain_handlers = [
                 TestFlightHandler(api),
                 AppHandler(api),
+                AnalyticsHandler(api),
             ]
         return self._domain_handlers
 
