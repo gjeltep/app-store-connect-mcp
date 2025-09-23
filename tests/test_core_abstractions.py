@@ -73,6 +73,13 @@ class TestAPIQueryBuilder:
         assert builder3.params["limit"] == 75
         assert "sort" not in builder3.params
 
+    def test_with_pagination_no_sort(self):
+        """Test pagination without sort parameter."""
+        builder = APIQueryBuilder("/v1/test").with_pagination(50)
+
+        assert "sort" not in builder.params
+        assert builder.params["limit"] == 50
+
     def test_with_filters(self):
         """Test filter parameters."""
         filters = {"rating": [4, 5], "territory": ["USA", "CAN"]}
