@@ -361,7 +361,7 @@ class AnalyticsHandler(BaseHandler):
         endpoint = "/v1/analyticsReportRequests"
 
         # Execute POST request directly with the API client
-        response = await self.api.post(endpoint, json=request_data)
+        response = await self.api.post(endpoint, data=request_data)
 
         # Return the response data
         return response
