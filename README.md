@@ -71,6 +71,28 @@ Tools use a resource-first naming convention (`resource.verb`) with category tag
 - **report_instances.list_segments**: List data segments for a report instance.
 - **report_segments.get**: Get segment download information (checksum, URL, size).
 - **report_instances.download_data**: Download analytics report data to a TSV file.
+#### Xcode Cloud Tools
+**Products & Workflows:**
+- **products.list**: List all Xcode Cloud products with filters (`product_type`).
+- **products.get**: Get detailed information about a specific product.
+- **workflows.list**: List workflows for a product with filters (`is_enabled`).
+- **workflows.get**: Get detailed workflow information (note: create/update/delete operations not supported for safety).
+
+**Builds:**
+- **builds.list**: List builds for a product or workflow with filters (`execution_progress`, `completion_status`, `is_pull_request_build`).
+- **builds.get**: Get detailed build information including status, duration, and issue counts.
+- **builds.start**: Start a new build for a workflow with optional branch/tag or pull request specification.
+
+**Build Artifacts & Results:**
+- **artifacts.list**: List downloadable artifacts for a build.
+- **issues.list**: List issues (errors, warnings) for builds or workflows.
+- **test_results.list**: List test results including status, duration, and failure messages.
+
+**SCM Integration:**
+- **scm_providers.list**: List configured SCM providers (GitHub, GitLab, Bitbucket).
+- **repositories.list**: List Git repositories for an SCM provider.
+- **pull_requests.list**: List pull requests for a repository.
+- **git_references.list**: List branches and tags for a repository.
 
 ### Architecture
 - `src/app_store_connect_mcp/server.py`: MCP stdio server entrypoint
@@ -89,6 +111,7 @@ Tools use a resource-first naming convention (`resource.verb`) with category tag
   - `testflight/handlers.py`: TestFlight crash management tools
   - `app/handlers.py`: App Store review management tools
   - `analytics/handlers.py`: Analytics report management tools
+  - `xcode_cloud/handlers.py`: Xcode Cloud CI/CD management tools
 - `src/app_store_connect_mcp/models/app_store_connect_models.py`: Auto‑generated Pydantic v2 models from OpenAPI spec
 - `scripts/generate_models.py`: Fetches Apple's OpenAPI spec and generates type‑safe models
 - `app_store_connect_api_openapi.json`: Apple's OpenAPI spec (checked in for reliability)
