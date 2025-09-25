@@ -56,7 +56,6 @@ class TestAPIQueryBuilder:
         assert builder.endpoint == "/v1/test"
         assert builder.params == {}
 
-
     def test_with_limit_and_sort(self):
         """Test MCP-specific limit and sort method."""
         # Test with limit under max

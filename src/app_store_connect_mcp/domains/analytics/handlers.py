@@ -98,7 +98,7 @@ class AnalyticsHandler(BaseHandler):
             report_id: str,
             granularity: Optional[List[str]] = None,
             processing_date: Optional[List[str]] = None,
-            limit: int = 100,  # Lightweight - mostly IDs/dates
+            limit: int = 100,
             include: Optional[List[str]] = None,
         ) -> Dict[str, Any]:
             """[Analytics/Reports] List instances for a specific analytics report.

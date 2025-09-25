@@ -42,7 +42,7 @@ class TestTestFlightDomainLogic:
     @pytest.mark.asyncio
     async def test_search_crash_submissions_applies_filters(self, handler, mock_api):
         """Test that search applies client-side filters correctly."""
-        # Setup mock data - now uses execute() instead of execute_all_pages()
+        # Setup mock data
         mock_api.get.return_value = {
             "data": [
                 {
@@ -123,7 +123,6 @@ class TestAppDomainLogic:
     @pytest.mark.asyncio
     async def test_search_customer_reviews_filters(self, handler, mock_api):
         """Test customer review search with multiple filters."""
-        # Now uses execute() instead of execute_all_pages()
         mock_api.get.return_value = {
             "data": [
                 {

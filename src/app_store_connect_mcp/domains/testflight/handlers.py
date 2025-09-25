@@ -92,7 +92,7 @@ class TestFlightHandler(BaseHandler):
             created_since_days: Optional[int] = None,
             created_after: Optional[str] = None,
             created_before: Optional[str] = None,
-            limit: int = 25,  # Reduced for large crash data
+            limit: int = 25,
             include: Optional[List[str]] = None,
             sort: str = "-createdDate",
         ) -> Dict[str, Any]:
@@ -172,7 +172,7 @@ class TestFlightHandler(BaseHandler):
         created_since_days: Optional[int] = None,
         created_after: Optional[str] = None,
         created_before: Optional[str] = None,
-        limit: int = 25,  # Reduced for large crash data
+        limit: int = 25,
         include: Optional[List[str]] = None,
         sort: str = "-createdDate",
     ) -> Dict[str, Any]:

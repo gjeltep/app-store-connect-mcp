@@ -144,4 +144,3 @@ class APIQueryBuilder:
                 return raw
 
         return raw
-
