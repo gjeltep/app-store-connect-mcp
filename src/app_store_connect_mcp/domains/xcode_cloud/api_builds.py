@@ -216,7 +216,7 @@ async def start_build(
         }
 
     # Make the POST request
-    response = await api.post(endpoint, json=request_data)
+    response = await api.post(endpoint, data=request_data)
 
     # Parse with the model if available
     try:
