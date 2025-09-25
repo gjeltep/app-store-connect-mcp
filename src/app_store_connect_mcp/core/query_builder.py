@@ -20,27 +20,29 @@ class APIQueryBuilder:
         """
         self.endpoint = endpoint
         self.params: Dict[str, Any] = {}
-        self._page_size = APP_STORE_CONNECT_MAX_PAGE_SIZE
-        self._max_total: Optional[int] = None
 
-    def with_pagination(
-        self, limit: int, sort: str = "-createdDate"
+    def with_limit_and_sort(
+        self, limit: int, sort: Optional[str] = None
     ) -> "APIQueryBuilder":
-        """Add pagination parameters.
+        """Add limit and optional sort parameters for MCP pagination.
+
+        This method is designed for MCP server usage where we want predictable
+        response sizes without auto-pagination to avoid LLM context overflow.
 
         Args:
-            limit: Maximum number of results
-            sort: Sort order for results
+            limit: Maximum number of results (capped at API max of 200)
+            sort: Optional sort order for results
 
         Returns:
             Self for method chaining
         """
-        self.params["sort"] = sort
-        if limit <= APP_STORE_CONNECT_MAX_PAGE_SIZE:
-            self.params["limit"] = limit
-        else:
-            # Will use get_all_pages with max_total
-            self._max_total = limit
+        # Cap limit at API maximum to prevent errors
+        safe_limit = min(limit, APP_STORE_CONNECT_MAX_PAGE_SIZE)
+        self.params["limit"] = safe_limit
+
+        if sort:
+            self.params["sort"] = sort
+
         return self
 
     def with_filters(
@@ -130,16 +132,7 @@ class APIQueryBuilder:
         Returns:
             The API response as a dictionary
         """
-        # Check if we need to use pagination
-        if self._max_total is not None:
-            raw = await api.get_all_pages(
-                self.endpoint,
-                params=self.params,
-                page_size=self._page_size,
-                max_total=self._max_total,
-            )
-        else:
-            raw = await api.get(self.endpoint, params=self.params)
+        raw = await api.get(self.endpoint, params=self.params)
 
         # Try to parse with the model if provided
         if response_model:
@@ -152,42 +145,3 @@ class APIQueryBuilder:
 
         return raw
 
-    async def execute_all_pages(
-        self,
-        api: APIClient,
-        response_model: Optional[Type[T]] = None,
-        max_total: Optional[int] = None,
-    ) -> Dict[str, Any]:
-        """Execute the query and fetch all pages.
-
-        Args:
-            api: The API client to use for the request
-            response_model: Optional Pydantic model to parse the response
-            max_total: Optional maximum total results to fetch
-
-        Returns:
-            The combined API response as a dictionary
-        """
-        raw = await api.get_all_pages(
-            self.endpoint,
-            params=self.params,
-            page_size=self._page_size,
-            max_total=max_total,
-        )
-
-        if response_model:
-            try:
-                parsed = response_model.model_validate(raw)
-                return parsed.model_dump(mode="json")
-            except Exception:
-                return raw
-
-        return raw
-
-    def build(self) -> tuple[str, Dict[str, Any]]:
-        """Build and return the endpoint and parameters.
-
-        Returns:
-            Tuple of (endpoint, params) for manual execution
-        """
-        return self.endpoint, self.params

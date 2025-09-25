@@ -71,7 +71,10 @@ class TestFlightHandler(BaseHandler):
             limit: int = 50,
             include: Optional[List[str]] = None,
         ) -> Dict[str, Any]:
-            """[TestFlight] List crash submissions from beta testers."""
+            """[TestFlight] List crash submissions from beta testers.
+
+            Default limit is 25 due to large response size. Max 200. Use pagination metadata for additional pages.
+            """
             return await self._get_crash_submissions(
                 app_id=app_id, filters=filters, sort=sort, limit=limit, include=include
             )
@@ -89,11 +92,14 @@ class TestFlightHandler(BaseHandler):
             created_since_days: Optional[int] = None,
             created_after: Optional[str] = None,
             created_before: Optional[str] = None,
-            limit: int = 200,
+            limit: int = 25,  # Reduced for large crash data
             include: Optional[List[str]] = None,
             sort: str = "-createdDate",
         ) -> Dict[str, Any]:
-            """[TestFlight] Search crash submissions with advanced filtering."""
+            """[TestFlight] Search crash submissions with advanced filtering.
+
+            Default limit is 25 due to large response size. Max 200. Use pagination metadata for additional pages.
+            """
             return await self._search_crash_submissions(
                 app_id=app_id,
                 app_platform=app_platform,
@@ -144,7 +150,7 @@ class TestFlightHandler(BaseHandler):
         # Build query using the query builder
         query = (
             APIQueryBuilder(endpoint)
-            .with_pagination(limit, sort)
+            .with_limit_and_sort(limit, sort)
             .with_filters(filters, CRASH_FILTER_MAPPING)
             .with_fields("betaFeedbackCrashSubmissions", FIELDS_BFCS)
             .with_includes(include)
@@ -166,7 +172,7 @@ class TestFlightHandler(BaseHandler):
         created_since_days: Optional[int] = None,
         created_after: Optional[str] = None,
         created_before: Optional[str] = None,
-        limit: int = 200,
+        limit: int = 25,  # Reduced for large crash data
         include: Optional[List[str]] = None,
         sort: str = "-createdDate",
     ) -> Dict[str, Any]:
@@ -185,14 +191,14 @@ class TestFlightHandler(BaseHandler):
 
         query = (
             APIQueryBuilder(endpoint)
-            .with_raw_params({"sort": sort})
+            .with_limit_and_sort(limit, sort)
             .with_filters(server_filters)  # Direct mapping for these
             .with_fields("betaFeedbackCrashSubmissions", FIELDS_BFCS)
             .with_includes(include)
         )
 
-        # Fetch all data for post-filtering
-        raw = await query.execute_all_pages(self.api)
+        # Execute query without auto-pagination
+        raw = await query.execute(self.api)
         data = raw.get("data", [])
         included = raw.get("included", [])
 

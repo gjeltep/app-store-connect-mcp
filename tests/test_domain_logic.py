@@ -17,7 +17,6 @@ class TestTestFlightDomainLogic:
         api.default_app_id = "test-app-123"
         api.ensure_app_id = Mock(side_effect=lambda x: x or "test-app-123")
         api.get = AsyncMock(return_value={"data": []})
-        api.get_all_pages = AsyncMock(return_value={"data": []})
         return api
 
     @pytest.fixture
@@ -43,8 +42,8 @@ class TestTestFlightDomainLogic:
     @pytest.mark.asyncio
     async def test_search_crash_submissions_applies_filters(self, handler, mock_api):
         """Test that search applies client-side filters correctly."""
-        # Setup mock data
-        mock_api.get_all_pages.return_value = {
+        # Setup mock data - now uses execute() instead of execute_all_pages()
+        mock_api.get.return_value = {
             "data": [
                 {
                     "id": "1",
@@ -103,7 +102,6 @@ class TestAppDomainLogic:
         api.default_app_id = "test-app-123"
         api.ensure_app_id = Mock(side_effect=lambda x: x or "test-app-123")
         api.get = AsyncMock(return_value={"data": []})
-        api.get_all_pages = AsyncMock(return_value={"data": []})
         return api
 
     @pytest.fixture
@@ -125,7 +123,8 @@ class TestAppDomainLogic:
     @pytest.mark.asyncio
     async def test_search_customer_reviews_filters(self, handler, mock_api):
         """Test customer review search with multiple filters."""
-        mock_api.get_all_pages.return_value = {
+        # Now uses execute() instead of execute_all_pages()
+        mock_api.get.return_value = {
             "data": [
                 {
                     "id": "1",

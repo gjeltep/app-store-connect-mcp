@@ -36,17 +36,6 @@ class MockAPIClient(APIClient):
         self.requests.append(("GET_URL", url, None))
         return {"data": [], "status": "ok"}
 
-    async def get_all_pages(
-        self,
-        endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
-        page_size: int = 200,
-        max_total: Optional[int] = None,
-    ) -> Dict[str, Any]:
-        """Mock paginated request."""
-        self.requests.append(("GET_ALL_PAGES", endpoint, params))
-        return self.responses.get(endpoint, {"data": [], "status": "ok"})
-
     @property
     def default_app_id(self) -> Optional[str]:
         """Mock default app ID."""
@@ -109,15 +98,6 @@ class FailingAPIClient(APIClient):
         raise Exception(self.error_message)
 
     async def get_url(self, url: str) -> Dict[str, Any]:
-        raise Exception(self.error_message)
-
-    async def get_all_pages(
-        self,
-        endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
-        page_size: int = 200,
-        max_total: Optional[int] = None,
-    ) -> Dict[str, Any]:
         raise Exception(self.error_message)
 
     @property
