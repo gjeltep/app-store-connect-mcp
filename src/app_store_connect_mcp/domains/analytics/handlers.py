@@ -8,6 +8,9 @@ from app_store_connect_mcp.core.base_handler import BaseHandler
 from app_store_connect_mcp.domains.analytics.api_reports import AnalyticsReportsAPI
 from app_store_connect_mcp.domains.analytics.api_requests import AnalyticsRequestsAPI
 from app_store_connect_mcp.domains.analytics.api_segments import AnalyticsSegmentsAPI
+from app_store_connect_mcp.domains.analytics.data_downloader import (
+    AnalyticsDataDownloader,
+)
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -22,6 +25,7 @@ class AnalyticsHandler(BaseHandler):
         self.reports_api = AnalyticsReportsAPI(api)
         self.requests_api = AnalyticsRequestsAPI(api)
         self.segments_api = AnalyticsSegmentsAPI(api)
+        self.data_downloader = AnalyticsDataDownloader()
 
     def register_tools(self, mcp: FastMCP) -> None:
         """Register analytics-related tools with the MCP server."""
@@ -146,3 +150,57 @@ class AnalyticsHandler(BaseHandler):
             return await self.segments_api.get_segment(
                 segment_id=segment_id, include=include
             )
+
+        @mcp.tool()
+        async def analytics_download_report_data(
+            instance_id: str,
+            output_path: Optional[str] = None,
+        ) -> Dict[str, Any]:
+            """[Analytics/Data] Download analytics report data to a TSV file.
+
+            This tool fetches all segments for a report instance and saves the data to a TSV file.
+            The file can then be analyzed using other tools.
+
+            Args:
+                instance_id: The analytics report instance ID
+                output_path: Optional path for the output file. If not provided, saves to temp directory
+
+            Returns:
+                Dict containing:
+                - status: "success", "no_data", or "error"
+                - file_path: Path to the downloaded TSV file
+                - file_size_mb: File size in megabytes
+                - segment_count: Number of segments downloaded
+                - row_count: Number of data rows (excluding header)
+                - message: Error message if status is "error" or "no_data"
+            """
+            try:
+                # Get all segments for this instance
+                segments_response = await self.segments_api.list_segments_for_instance(
+                    instance_id=instance_id,
+                    limit=200,  # Get all segments
+                )
+
+                segments = segments_response.get("data", [])
+
+                # Download segments to file
+                result = await self.data_downloader.download_segments_to_file(
+                    segments=segments, output_path=output_path
+                )
+
+                return result
+
+            except Exception as e:
+                return {
+                    "status": "error",
+                    "message": f"Failed to download report data: {str(e)}",
+                    "file_path": None,
+                    "file_size_mb": 0,
+                    "segment_count": 0,
+                    "row_count": 0,
+                }
+
+    async def cleanup(self) -> None:
+        """Cleanup resources when handler is destroyed."""
+        if hasattr(self, "data_downloader"):
+            await self.data_downloader.aclose()
