@@ -1,4 +1,4 @@
-"""API methods for Xcode Cloud products and workflows."""
+"""XcodeCloud API methods for Xcode Cloud products and workflows."""
 
 from typing import Optional, List, Dict, Any
 
@@ -10,32 +10,12 @@ from app_store_connect_mcp.models import (
 )
 from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.core.protocols import APIClient
-
-
-# Field definitions for products and workflows
-FIELDS_CI_PRODUCTS: List[str] = [
-    "name",
-    "createdDate",
-    "productType",
-]
-
-FIELDS_CI_WORKFLOWS: List[str] = [
-    "name",
-    "description",
-    "isEnabled",
-    "isLockedForEditing",
-    "containerFilePath",
-    "lastModifiedDate",
-]
-
-# Filter mappings for server-side filtering
-PRODUCT_FILTER_MAPPING = {
-    "product_type": "productType",
-}
-
-WORKFLOW_FILTER_MAPPING = {
-    "is_enabled": "isEnabled",
-}
+from app_store_connect_mcp.domains.xcode_cloud.constants import (
+    FIELDS_CI_PRODUCTS,
+    FIELDS_CI_WORKFLOWS,
+    PRODUCT_FILTER_MAPPING,
+    WORKFLOW_FILTER_MAPPING,
+)
 
 
 async def list_products(
@@ -82,7 +62,12 @@ async def list_workflows(
     limit: int = 50,
     include: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
-    """List workflows for a product."""
+    """List workflows for a product.
+
+    Note: This is a read-only operation. Create, update, and delete operations
+    for workflows are not supported through this API for safety reasons.
+    Workflow modifications should be done through Xcode or the App Store Connect web interface.
+    """
     endpoint = f"/v1/ciProducts/{product_id}/workflows"
 
     query = (
@@ -101,7 +86,12 @@ async def get_workflow(
     workflow_id: str,
     include: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
-    """Get detailed information about a specific workflow."""
+    """Get detailed information about a specific workflow.
+
+    Note: This is a read-only operation. Create, update, and delete operations
+    for workflows are not supported through this API for safety reasons.
+    Workflow modifications should be done through Xcode or the App Store Connect web interface.
+    """
     endpoint = f"/v1/ciWorkflows/{workflow_id}"
 
     query = (

@@ -1,4 +1,4 @@
-"""API methods for Xcode Cloud builds, artifacts, issues, and test results."""
+"""XcodeCloud build API operations."""
 
 from typing import Optional, List, Dict, Any, Callable
 
@@ -10,53 +10,13 @@ from app_store_connect_mcp.models import (
 from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.core.protocols import APIClient
 from app_store_connect_mcp.core.errors import ValidationError
-
-
-# Field definitions for builds and related resources
-FIELDS_CI_BUILD_RUNS: List[str] = [
-    "number",
-    "createdDate",
-    "startedDate",
-    "finishedDate",
-    "sourceCommit",
-    "destinationCommit",
-    "isPullRequestBuild",
-    "issueCounts",
-    "executionProgress",
-    "completionStatus",
-    "startReason",
-    "cancelReason",
-]
-
-FIELDS_CI_ARTIFACTS: List[str] = [
-    "fileType",
-    "fileName",
-    "fileSize",
-    "downloadUrl",
-]
-
-FIELDS_CI_ISSUES: List[str] = [
-    "issueType",
-    "message",
-    "fileSource",
-    "category",
-]
-
-FIELDS_CI_TEST_RESULTS: List[str] = [
-    "className",
-    "name",
-    "status",
-    "message",
-    "fileSource",
-    "destinationTestResults",
-]
-
-# Filter mappings for server-side filtering
-BUILD_FILTER_MAPPING = {
-    "execution_progress": "executionProgress",
-    "completion_status": "completionStatus",
-    "is_pull_request_build": "isPullRequestBuild",
-}
+from app_store_connect_mcp.domains.xcode_cloud.constants import (
+    FIELDS_CI_BUILD_RUNS,
+    FIELDS_CI_ARTIFACTS,
+    FIELDS_CI_ISSUES,
+    FIELDS_CI_TEST_RESULTS,
+    BUILD_FILTER_MAPPING,
+)
 
 
 async def list_builds(

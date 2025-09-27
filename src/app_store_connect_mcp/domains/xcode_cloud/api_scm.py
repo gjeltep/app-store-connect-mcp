@@ -1,4 +1,4 @@
-"""API methods for SCM (Source Control Management) operations."""
+"""XcodeCloud SCM API operations."""
 
 from typing import Optional, List, Dict, Any
 
@@ -10,42 +10,12 @@ from app_store_connect_mcp.models import (
 )
 from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.core.protocols import APIClient
-
-
-# Field definitions for SCM resources
-FIELDS_SCM_PROVIDERS: List[str] = [
-    "scmProviderType",
-    "url",
-]
-
-FIELDS_SCM_REPOSITORIES: List[str] = [
-    "repositoryName",
-    "ownerName",
-    "httpCloneUrl",
-    "sshCloneUrl",
-    "lastAccessedDate",
-]
-
-FIELDS_SCM_PULL_REQUESTS: List[str] = [
-    "title",
-    "number",
-    "webUrl",
-    "sourceRepositoryOwner",
-    "sourceRepositoryName",
-    "sourceBranchName",
-    "destinationRepositoryOwner",
-    "destinationRepositoryName",
-    "destinationBranchName",
-    "isClosed",
-    "isCrossRepository",
-]
-
-FIELDS_SCM_GIT_REFERENCES: List[str] = [
-    "name",
-    "canonicalName",
-    "isDeleted",
-    "kind",
-]
+from app_store_connect_mcp.domains.xcode_cloud.constants import (
+    FIELDS_SCM_PROVIDERS,
+    FIELDS_SCM_REPOSITORIES,
+    FIELDS_SCM_PULL_REQUESTS,
+    FIELDS_SCM_GIT_REFERENCES,
+)
 
 
 async def list_scm_providers(
