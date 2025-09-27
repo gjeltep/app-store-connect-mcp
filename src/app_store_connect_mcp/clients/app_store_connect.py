@@ -8,7 +8,6 @@ import jwt
 from app_store_connect_mcp.core.errors import ConfigurationError, AuthenticationError
 from app_store_connect_mcp.clients.http_client import BaseHTTPClient
 from app_store_connect_mcp.core.protocols import APIClient
-from app_store_connect_mcp.core.pagination import PaginationMixin
 from app_store_connect_mcp.core.constants import (
     JWT_TTL_SECONDS,
     JWT_EARLY_RENEWAL_SECONDS,
@@ -16,7 +15,7 @@ from app_store_connect_mcp.core.constants import (
 )
 
 
-class AppStoreConnectAPI(BaseHTTPClient, PaginationMixin, APIClient):
+class AppStoreConnectAPI(BaseHTTPClient, APIClient):
     """Async App Store Connect API client."""
 
     def __init__(self):

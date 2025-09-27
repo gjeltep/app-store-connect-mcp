@@ -20,7 +20,6 @@ class TestBaseHandler:
         api = Mock()
         api.default_app_id = "test-app-123"
         api.get = AsyncMock()
-        api.get_all_pages = AsyncMock()
         return api
 
     @pytest.fixture
@@ -49,7 +48,6 @@ class TestAPIQueryBuilder:
         """Create a mock API client."""
         api = Mock()
         api.get = AsyncMock(return_value={"data": []})
-        api.get_all_pages = AsyncMock(return_value={"data": []})
         return api
 
     def test_builder_initialization(self):
@@ -58,20 +56,22 @@ class TestAPIQueryBuilder:
         assert builder.endpoint == "/v1/test"
         assert builder.params == {}
 
-    def test_with_pagination(self):
-        """Test pagination parameters."""
-        builder = APIQueryBuilder("/v1/test").with_pagination(50, "-createdDate")
-
-        assert builder.params["sort"] == "-createdDate"
+    def test_with_limit_and_sort(self):
+        """Test MCP-specific limit and sort method."""
+        # Test with limit under max
+        builder = APIQueryBuilder("/v1/test").with_limit_and_sort(50, "-createdDate")
         assert builder.params["limit"] == 50
+        assert builder.params["sort"] == "-createdDate"
 
-    def test_with_pagination_large_limit(self):
-        """Test pagination with limit exceeding page size."""
-        builder = APIQueryBuilder("/v1/test").with_pagination(500, "rating")
+        # Test with limit over max (should cap at 200)
+        builder2 = APIQueryBuilder("/v1/test").with_limit_and_sort(500, "rating")
+        assert builder2.params["limit"] == 200
+        assert builder2.params["sort"] == "rating"
 
-        assert builder.params["sort"] == "rating"
-        assert "limit" not in builder.params  # Should use get_all_pages
-        assert builder._max_total == 500
+        # Test without sort
+        builder3 = APIQueryBuilder("/v1/test").with_limit_and_sort(75)
+        assert builder3.params["limit"] == 75
+        assert "sort" not in builder3.params
 
     def test_with_filters(self):
         """Test filter parameters."""
@@ -110,7 +110,7 @@ class TestAPIQueryBuilder:
         """Test fluent interface method chaining."""
         builder = (
             APIQueryBuilder("/v1/test")
-            .with_pagination(100, "-rating")
+            .with_limit_and_sort(100, "-rating")
             .with_filters({"rating": [5]})
             .with_fields("reviews", ["rating"])
             .with_includes(["response"])
@@ -118,6 +118,7 @@ class TestAPIQueryBuilder:
 
         assert builder.endpoint == "/v1/test"
         assert builder.params["sort"] == "-rating"
+        assert builder.params["limit"] == 100
         assert builder.params["filter[rating]"] == "5"
         assert builder.params["fields[reviews]"] == "rating"
         assert builder.params["include"] == "response"
@@ -125,21 +126,12 @@ class TestAPIQueryBuilder:
     @pytest.mark.asyncio
     async def test_execute(self, mock_api):
         """Test query execution."""
-        builder = APIQueryBuilder("/v1/test").with_pagination(50, "-date")
+        builder = APIQueryBuilder("/v1/test").with_limit_and_sort(50, "-date")
         result = await builder.execute(mock_api)
 
         mock_api.get.assert_called_once_with(
             "/v1/test", params={"sort": "-date", "limit": 50}
         )
-        assert result == {"data": []}
-
-    @pytest.mark.asyncio
-    async def test_execute_all_pages(self, mock_api):
-        """Test fetching all pages."""
-        builder = APIQueryBuilder("/v1/test")
-        result = await builder.execute_all_pages(mock_api, max_total=1000)
-
-        mock_api.get_all_pages.assert_called_once()
         assert result == {"data": []}
 
 

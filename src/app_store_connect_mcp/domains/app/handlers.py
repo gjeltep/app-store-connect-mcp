@@ -77,7 +77,7 @@ class AppHandler(BaseHandler):
             created_before: Optional[str] = None,
             body_contains: Optional[List[str]] = None,
             title_contains: Optional[List[str]] = None,
-            limit: int = 200,
+            limit: int = 50,
             include: Optional[List[str]] = None,
             sort: str = "-createdDate",
         ) -> Dict[str, Any]:
@@ -115,7 +115,7 @@ class AppHandler(BaseHandler):
         # Build query using the query builder
         query = (
             APIQueryBuilder(endpoint)
-            .with_pagination(limit, sort)
+            .with_limit_and_sort(limit, sort)
             .with_filters(filters, FILTER_MAPPING)
             .with_fields("customerReviews", FIELDS_CUSTOMER_REVIEWS)
             .with_includes(include)
@@ -155,7 +155,7 @@ class AppHandler(BaseHandler):
         created_before: Optional[str] = None,
         body_contains: Optional[List[str]] = None,
         title_contains: Optional[List[str]] = None,
-        limit: int = 200,
+        limit: int = 50,
         include: Optional[List[str]] = None,
         sort: str = "-createdDate",
     ) -> Dict[str, Any]:
@@ -172,14 +172,14 @@ class AppHandler(BaseHandler):
 
         query = (
             APIQueryBuilder(endpoint)
-            .with_raw_params({"sort": sort})
+            .with_limit_and_sort(limit, sort)
             .with_filters(server_filters, FILTER_MAPPING)
             .with_fields("customerReviews", FIELDS_CUSTOMER_REVIEWS)
             .with_includes(include)
         )
 
-        # Fetch all data for post-filtering
-        raw = await query.execute_all_pages(self.api)
+        # Execute query without auto-pagination
+        raw = await query.execute(self.api)
         data = raw.get("data", [])
         included = raw.get("included", [])
 

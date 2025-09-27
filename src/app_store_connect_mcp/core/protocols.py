@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List, TYPE_CHECKING
-from app_store_connect_mcp.core.constants import APP_STORE_CONNECT_MAX_PAGE_SIZE
 
 # Avoid circular import - FastMCP only needed for type hints, not runtime
 if TYPE_CHECKING:
@@ -34,17 +33,6 @@ class APIClient(ABC):
     @abstractmethod
     async def get_url(self, url: str) -> Dict[str, Any]:
         """Get a specific URL."""
-        pass
-
-    @abstractmethod
-    async def get_all_pages(
-        self,
-        endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
-        page_size: int = APP_STORE_CONNECT_MAX_PAGE_SIZE,
-        max_total: Optional[int] = None,
-    ) -> Dict[str, Any]:
-        """Get all pages of a paginated response."""
         pass
 
     @property
