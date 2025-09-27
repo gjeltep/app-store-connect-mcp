@@ -119,9 +119,8 @@ async def _fetch_action_resources(
     limit: int,
     filter_actions: Optional[Callable[[Dict], bool]] = None,
 ) -> Dict[str, Any]:
-    """Helper to fetch resources from build actions.
+    """Helper to fetch resources from build actions:
 
-    This DRY helper handles the common pattern of:
     1. Fetching all actions for a build
     2. Iterating through actions to get their resources
     3. Augmenting resources with action context
@@ -136,29 +135,27 @@ async def _fetch_action_resources(
         limit: Max resources per action
         filter_actions: Optional filter to only process certain actions
     """
-    # First, get the build actions for this build run
+    # 1 - get build actions for build run
     actions_endpoint = f"/v1/ciBuildRuns/{build_id}/actions"
     actions_query = (
         APIQueryBuilder(actions_endpoint)
-        .with_limit_and_sort(200)  # Get all actions
+        .with_limit_and_sort(200)
         .with_fields("ciBuildActions", action_fields)
     )
 
     actions_response = await actions_query.execute(api)
 
-    # Collect all resources from all actions
+    # 2 - collect all resources from all actions
     all_resources = []
     actions_data = actions_response.get("data", [])
 
     for action in actions_data:
         action_id = action.get("id")
 
-        # Apply filter if provided
         if filter_actions and not filter_actions(action):
             continue
 
         if action_id:
-            # Get resources for this specific action
             resource_endpoint = (
                 f"/v1/ciBuildActions/{action_id}/{resource_endpoint_suffix}"
             )
@@ -171,7 +168,6 @@ async def _fetch_action_resources(
             resource_response = await resource_query.execute(api)
             resources = resource_response.get("data", [])
 
-            # Add action context to each resource
             for resource in resources:
                 resource["_action"] = {
                     "id": action_id,
@@ -180,7 +176,7 @@ async def _fetch_action_resources(
                 }
                 all_resources.append(resource)
 
-    # Return combined response
+    # 3 - return resources as response
     return {
         "data": all_resources,
         "meta": {"total": len(all_resources)},

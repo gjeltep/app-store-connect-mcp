@@ -57,7 +57,7 @@ async def list_scm_providers(
 
     query = (
         APIQueryBuilder(endpoint)
-        .with_limit_and_sort(limit)  # Supports limit but not sort
+        .with_limit_and_sort(limit)  # API supports limit but not sort
         .with_fields("scmProviders", FIELDS_SCM_PROVIDERS)
     )
 
@@ -75,7 +75,7 @@ async def list_repositories(
 
     query = (
         APIQueryBuilder(endpoint)
-        .with_limit_and_sort(limit)  # Supports limit but not sort
+        .with_limit_and_sort(limit)  # API supports limit but not sort
         .with_fields("scmRepositories", FIELDS_SCM_REPOSITORIES)
         .with_includes(include)
     )
@@ -94,7 +94,7 @@ async def list_pull_requests(
 
     query = (
         APIQueryBuilder(endpoint)
-        .with_limit_and_sort(limit)  # Supports limit but not sort
+        .with_limit_and_sort(limit)  # API supports limit but not sort
         .with_fields("scmPullRequests", FIELDS_SCM_PULL_REQUESTS)
         .with_includes(include)
     )
@@ -113,7 +113,7 @@ async def list_git_references(
 
     query = (
         APIQueryBuilder(endpoint)
-        .with_limit_and_sort(limit)  # Supports limit but not sort
+        .with_limit_and_sort(limit)  # API supports limit but not sort
         .with_fields("scmGitReferences", FIELDS_SCM_GIT_REFERENCES)
         .with_includes(include)
     )
