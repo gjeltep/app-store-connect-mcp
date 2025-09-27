@@ -61,7 +61,7 @@ Tools use a resource-first naming convention (`resource.verb`) with category tag
 - **crashes.get_log**: Retrieve the raw crash log text for a specific submission.
 
 #### Analytics Tools
-- **apps.list_analytics_report_requests**: List analytics report requests for an app with filters (`access_type`).
+- **analytics_report_requests.list**: List analytics report requests for an app with filters (`access_type`).
 - **report_requests.create**: Create new analytics report requests for specific metrics and timeframes.
 - **report_requests.get**: Get detailed information about a specific analytics report request.
 - **report_requests.list_reports**: List available reports within a request with filters (`name`, `category`).
@@ -70,6 +70,7 @@ Tools use a resource-first naming convention (`resource.verb`) with category tag
 - **report_instances.get**: Get detailed information about a specific report instance.
 - **report_instances.list_segments**: List data segments for a report instance.
 - **report_segments.get**: Get segment download information (checksum, URL, size).
+- **report_instances.download_data**: Download analytics report data to a TSV file.
 
 ### Architecture
 - `src/app_store_connect_mcp/server.py`: MCP stdio server entrypoint

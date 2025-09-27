@@ -31,7 +31,7 @@ class AnalyticsHandler(BaseHandler):
         """Register analytics-related tools with the MCP server."""
 
         @mcp.tool()
-        async def apps_list_analytics_report_requests(
+        async def analytics_report_requests_list(
             app_id: Optional[str] = None,
             access_type: Optional[List[str]] = None,
             limit: int = 50,
@@ -152,7 +152,7 @@ class AnalyticsHandler(BaseHandler):
             )
 
         @mcp.tool()
-        async def analytics_download_report_data(
+        async def report_instances_download_data(
             instance_id: str,
             output_path: Optional[str] = None,
         ) -> Dict[str, Any]:
