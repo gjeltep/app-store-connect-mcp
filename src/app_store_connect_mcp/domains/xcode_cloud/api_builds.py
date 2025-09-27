@@ -83,7 +83,7 @@ async def list_builds(
     # Build query with common parameters
     query = (
         APIQueryBuilder(endpoint)
-        .with_pagination(limit, sort)
+        .with_limit_and_sort(limit, sort)
         .with_filters(filters, BUILD_FILTER_MAPPING)
         .with_fields("ciBuildRuns", FIELDS_CI_BUILD_RUNS)
         .with_includes(include)
@@ -140,7 +140,7 @@ async def _fetch_action_resources(
     actions_endpoint = f"/v1/ciBuildRuns/{build_id}/actions"
     actions_query = (
         APIQueryBuilder(actions_endpoint)
-        .with_pagination(200)  # Get all actions
+        .with_limit_and_sort(200)  # Get all actions
         .with_fields("ciBuildActions", action_fields)
     )
 
@@ -162,7 +162,7 @@ async def _fetch_action_resources(
             resource_endpoint = f"/v1/ciBuildActions/{action_id}/{resource_endpoint_suffix}"
             resource_query = (
                 APIQueryBuilder(resource_endpoint)
-                .with_pagination(limit)
+                .with_limit_and_sort(limit)
                 .with_fields(resource_fields_name, resource_fields)
             )
 

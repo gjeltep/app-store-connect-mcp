@@ -49,7 +49,7 @@ async def list_products(
 
     query = (
         APIQueryBuilder(endpoint)
-        .with_pagination(limit)  # No sort parameter supported
+        .with_limit_and_sort(limit)  # No sort parameter supported
         .with_filters(filters, PRODUCT_FILTER_MAPPING)
         .with_fields("ciProducts", FIELDS_CI_PRODUCTS)
         .with_includes(include)
@@ -87,7 +87,7 @@ async def list_workflows(
 
     query = (
         APIQueryBuilder(endpoint)
-        .with_pagination(limit)  # No sort parameter supported
+        .with_limit_and_sort(limit)  # No sort parameter supported
         .with_filters(filters, WORKFLOW_FILTER_MAPPING)
         .with_fields("ciWorkflows", FIELDS_CI_WORKFLOWS)
         .with_includes(include)
