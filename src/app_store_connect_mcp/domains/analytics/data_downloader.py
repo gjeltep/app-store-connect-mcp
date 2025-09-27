@@ -4,6 +4,7 @@ import gzip
 import io
 import os
 import tempfile
+from enum import Enum
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 import httpx
@@ -13,6 +14,21 @@ from app_store_connect_mcp.core.errors import (
     NetworkError,
 )
 
+# Constants
+HTTP_TIMEOUT_SECONDS = 60.0
+URL_TRUNCATE_LENGTH = 100
+TEMP_FILE_PREFIX = "analytics_"
+TEMP_FILE_SUFFIX = ".tsv"
+FILE_ENCODING = "utf-8"
+BYTES_PER_MEGABYTE = 1024 * 1024
+
+
+class DownloadStatus(str, Enum):
+    """Status values for download operations."""
+    SUCCESS = "success"
+    NO_DATA = "no_data"
+    ERROR = "error"
+
 
 class AnalyticsDataDownloader:
     """Downloads analytics report data from pre-signed S3 URLs and saves to TSV files."""
@@ -20,7 +36,45 @@ class AnalyticsDataDownloader:
     def __init__(self):
         """Initialize the downloader with a simple HTTP client."""
         # No auth needed - S3 URLs are pre-signed
-        self._client = httpx.AsyncClient(timeout=60.0)
+        self._client = httpx.AsyncClient(timeout=HTTP_TIMEOUT_SECONDS)
+
+    def _create_result_dict(
+        self,
+        status: DownloadStatus,
+        file_path: Optional[str] = None,
+        file_size_mb: float = 0,
+        segment_count: int = 0,
+        row_count: int = 0,
+        message: Optional[str] = None,
+        errors: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Create a standardized result dictionary for download operations.
+
+        Args:
+            status: Operation status from DownloadStatus enum
+            file_path: Path to the downloaded file (if successful)
+            file_size_mb: File size in megabytes
+            segment_count: Number of segments processed
+            row_count: Number of data rows (excluding header)
+            message: Optional status message
+            errors: Optional list of non-fatal errors
+
+        Returns:
+            Standardized result dictionary
+        """
+        result = {
+            "status": status.value,
+            "file_path": file_path,
+            "file_size_mb": file_size_mb,
+            "segment_count": segment_count,
+            "row_count": row_count,
+            "errors": errors,
+        }
+
+        if message:
+            result["message"] = message
+
+        return result
 
     async def aclose(self) -> None:
         """Close the HTTP client."""
@@ -46,7 +100,7 @@ class AnalyticsDataDownloader:
         except httpx.NetworkError as e:
             raise NetworkError(
                 f"Failed to download analytics segment: {str(e)}",
-                details={"url": url[:100] + "..."},  # Truncate URL for security
+                details={"url": url[:URL_TRUNCATE_LENGTH] + "..."},  # Truncate URL for security
             )
         except httpx.HTTPStatusError as e:
             raise AppStoreConnectError(
@@ -74,11 +128,11 @@ class AnalyticsDataDownloader:
         try:
             # Decompress gzipped content
             with gzip.GzipFile(fileobj=io.BytesIO(raw_data)) as gz:
-                return gz.read().decode("utf-8")
+                return gz.read().decode(FILE_ENCODING)
         except gzip.BadGzipFile:
             # If not gzipped (unlikely), return as text
             try:
-                return raw_data.decode("utf-8")
+                return raw_data.decode(FILE_ENCODING)
             except UnicodeDecodeError:
                 raise AppStoreConnectError(
                     "Segment data is not valid text or gzipped text"
@@ -106,14 +160,10 @@ class AnalyticsDataDownloader:
             - errors: List of any non-fatal errors encountered
         """
         if not segments:
-            return {
-                "status": "no_data",
-                "message": "No segments available for this report instance",
-                "file_path": None,
-                "file_size_mb": 0,
-                "segment_count": 0,
-                "row_count": 0,
-            }
+            return self._create_result_dict(
+                status=DownloadStatus.NO_DATA,
+                message="No segments available for this report instance",
+            )
 
         # Extract URLs from segment objects
         segment_urls = []
@@ -123,21 +173,17 @@ class AnalyticsDataDownloader:
                 segment_urls.append(attrs["url"])
 
         if not segment_urls:
-            return {
-                "status": "error",
-                "message": "No download URLs found in segments",
-                "file_path": None,
-                "file_size_mb": 0,
-                "segment_count": 0,
-                "row_count": 0,
-            }
+            return self._create_result_dict(
+                status=DownloadStatus.ERROR,
+                message="No download URLs found in segments",
+            )
 
         # Determine output file path
         if output_path:
             file_path = Path(output_path)
         else:
             # Create temp file
-            fd, temp_path = tempfile.mkstemp(suffix=".tsv", prefix="analytics_")
+            fd, temp_path = tempfile.mkstemp(suffix=TEMP_FILE_SUFFIX, prefix=TEMP_FILE_PREFIX)
             os.close(fd)  # Close the file descriptor
             file_path = Path(temp_path)
 
@@ -147,7 +193,7 @@ class AnalyticsDataDownloader:
             headers_written = False
             errors = []
 
-            with open(file_path, "w", encoding="utf-8") as outfile:
+            with open(file_path, "w", encoding=FILE_ENCODING) as outfile:
                 for i, url in enumerate(segment_urls):
                     try:
                         # Download and decompress segment
@@ -179,27 +225,23 @@ class AnalyticsDataDownloader:
                 # No successful downloads
                 if file_path.exists():
                     file_path.unlink()
-                return {
-                    "status": "error",
-                    "message": f"Failed to download any segments: {'; '.join(errors)}",
-                    "file_path": None,
-                    "file_size_mb": 0,
-                    "segment_count": 0,
-                    "row_count": 0,
-                }
+                return self._create_result_dict(
+                    status=DownloadStatus.ERROR,
+                    message=f"Failed to download any segments: {'; '.join(errors)}",
+                )
 
             # Get file size
             file_size_bytes = file_path.stat().st_size
-            file_size_mb = round(file_size_bytes / (1024 * 1024), 2)
+            file_size_mb = round(file_size_bytes / BYTES_PER_MEGABYTE, 2)
 
-            return {
-                "status": "success",
-                "file_path": str(file_path),
-                "file_size_mb": file_size_mb,
-                "segment_count": len(segment_urls),
-                "row_count": row_count,
-                "errors": errors if errors else None,
-            }
+            return self._create_result_dict(
+                status=DownloadStatus.SUCCESS,
+                file_path=str(file_path),
+                file_size_mb=file_size_mb,
+                segment_count=len(segment_urls),
+                row_count=row_count,
+                errors=errors or None,
+            )
 
         except Exception as e:
             # Clean up file on error
