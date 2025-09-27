@@ -2,6 +2,7 @@
 
 from typing import Optional, List, Dict, Any
 
+from app_store_connect_mcp.core.protocols import APIClient
 from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.models import (
     AnalyticsReportRequestsResponse,
@@ -15,7 +16,7 @@ FIELDS_ANALYTICS_REPORT_REQUESTS = ["accessType", "stoppedDueToInactivity", "rep
 class AnalyticsRequestsAPI:
     """API operations for analytics report requests."""
 
-    def __init__(self, api):
+    def __init__(self, api: APIClient) -> None:
         self.api = api
 
     async def get_report_request(

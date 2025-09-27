@@ -2,6 +2,7 @@
 
 from typing import Optional, List, Dict, Any
 
+from app_store_connect_mcp.core.protocols import APIClient
 from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.models import (
     AnalyticsReportsResponse,
@@ -26,7 +27,7 @@ ANALYTICS_FILTER_MAPPING = {
 class AnalyticsReportsAPI:
     """API operations for analytics reports and instances."""
 
-    def __init__(self, api):
+    def __init__(self, api: APIClient) -> None:
         self.api = api
 
     async def list_reports_for_request(

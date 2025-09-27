@@ -2,6 +2,7 @@
 
 from typing import Optional, List, Dict, Any
 
+from app_store_connect_mcp.core.protocols import APIClient
 from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.models import (
     AnalyticsReportSegmentsResponse,
@@ -15,7 +16,7 @@ FIELDS_ANALYTICS_REPORT_SEGMENTS = ["checksum", "sizeInBytes", "url"]
 class AnalyticsSegmentsAPI:
     """API operations for analytics report segments."""
 
-    def __init__(self, api):
+    def __init__(self, api: APIClient) -> None:
         self.api = api
 
     async def list_segments_for_instance(
