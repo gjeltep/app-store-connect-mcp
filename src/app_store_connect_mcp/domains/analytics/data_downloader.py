@@ -25,6 +25,7 @@ BYTES_PER_MEGABYTE = 1024 * 1024
 
 class DownloadStatus(str, Enum):
     """Status values for download operations."""
+
     SUCCESS = "success"
     NO_DATA = "no_data"
     ERROR = "error"
@@ -100,7 +101,9 @@ class AnalyticsDataDownloader:
         except httpx.NetworkError as e:
             raise NetworkError(
                 f"Failed to download analytics segment: {str(e)}",
-                details={"url": url[:URL_TRUNCATE_LENGTH] + "..."},  # Truncate URL for security
+                details={
+                    "url": url[:URL_TRUNCATE_LENGTH] + "..."
+                },  # Truncate URL for security
             )
         except httpx.HTTPStatusError as e:
             raise AppStoreConnectError(
@@ -183,7 +186,9 @@ class AnalyticsDataDownloader:
             file_path = Path(output_path)
         else:
             # Create temp file
-            fd, temp_path = tempfile.mkstemp(suffix=TEMP_FILE_SUFFIX, prefix=TEMP_FILE_PREFIX)
+            fd, temp_path = tempfile.mkstemp(
+                suffix=TEMP_FILE_SUFFIX, prefix=TEMP_FILE_PREFIX
+            )
             os.close(fd)  # Close the file descriptor
             file_path = Path(temp_path)
 
