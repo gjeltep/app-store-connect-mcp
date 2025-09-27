@@ -33,7 +33,7 @@ class Container:
                 AnalyticsHandler(api),
                 AppHandler(api),
                 TestFlightHandler(api),
-                XcodeCloudHandler(api)
+                XcodeCloudHandler(api),
             ]
         return self._domain_handlers
 

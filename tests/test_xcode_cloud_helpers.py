@@ -16,7 +16,9 @@ class TestXcodeCloudQueryConstruction:
     async def test_list_builds_with_workflow_id(self):
         """Test that list_builds constructs correct query for workflow."""
         mock_api = AsyncMock()
-        mock_api.get = AsyncMock(return_value={"data": [], "meta": {"paging": {"total": 0}}})
+        mock_api.get = AsyncMock(
+            return_value={"data": [], "meta": {"paging": {"total": 0}}}
+        )
 
         await list_builds(api=mock_api, workflow_id="test-workflow-123", limit=10)
 
@@ -40,21 +42,29 @@ class TestXcodeCloudQueryConstruction:
         with pytest.raises(ValidationError) as exc_info:
             await list_builds(api=mock_api)
 
-        assert "either product_id or workflow_id must be provided" in str(exc_info.value)
+        assert "either product_id or workflow_id must be provided" in str(
+            exc_info.value
+        )
         assert exc_info.value.category.value == "validation"
 
     @pytest.mark.asyncio
     async def test_list_builds_single_query_construction(self):
         """Test that query building logic is not duplicated between workflow and product paths."""
         mock_api = AsyncMock()
-        mock_api.get = AsyncMock(return_value={"data": [], "meta": {"paging": {"total": 0}}})
+        mock_api.get = AsyncMock(
+            return_value={"data": [], "meta": {"paging": {"total": 0}}}
+        )
 
         # Test with workflow
-        await list_builds(api=mock_api, workflow_id="w1", filters={"is_pull_request_build": True})
+        await list_builds(
+            api=mock_api, workflow_id="w1", filters={"is_pull_request_build": True}
+        )
         call1_params = mock_api.get.call_args[1]["params"]
 
         # Test with product
-        await list_builds(api=mock_api, product_id="p1", filters={"is_pull_request_build": True})
+        await list_builds(
+            api=mock_api, product_id="p1", filters={"is_pull_request_build": True}
+        )
         call2_params = mock_api.get.call_args[1]["params"]
 
         # Both should have identical query parameters
@@ -70,26 +80,34 @@ class TestFetchActionResources:
         mock_api = AsyncMock()
 
         # Mock the actions response
-        mock_api.get = AsyncMock(side_effect=[
-            # First call: get actions
-            {
-                "data": [
-                    {"id": "action-1", "attributes": {"name": "Build", "actionType": "BUILD"}},
-                    {"id": "action-2", "attributes": {"name": "Test", "actionType": "TEST"}},
-                ],
-                "meta": {"paging": {"total": 2}}
-            },
-            # Second call: get resources for action-1
-            {
-                "data": [{"id": "artifact-1", "type": "ciArtifacts"}],
-                "meta": {"paging": {"total": 1}}
-            },
-            # Third call: get resources for action-2
-            {
-                "data": [{"id": "artifact-2", "type": "ciArtifacts"}],
-                "meta": {"paging": {"total": 1}}
-            },
-        ])
+        mock_api.get = AsyncMock(
+            side_effect=[
+                # First call: get actions
+                {
+                    "data": [
+                        {
+                            "id": "action-1",
+                            "attributes": {"name": "Build", "actionType": "BUILD"},
+                        },
+                        {
+                            "id": "action-2",
+                            "attributes": {"name": "Test", "actionType": "TEST"},
+                        },
+                    ],
+                    "meta": {"paging": {"total": 2}},
+                },
+                # Second call: get resources for action-1
+                {
+                    "data": [{"id": "artifact-1", "type": "ciArtifacts"}],
+                    "meta": {"paging": {"total": 1}},
+                },
+                # Third call: get resources for action-2
+                {
+                    "data": [{"id": "artifact-2", "type": "ciArtifacts"}],
+                    "meta": {"paging": {"total": 1}},
+                },
+            ]
+        )
 
         result = await _fetch_action_resources(
             api=mock_api,
@@ -119,22 +137,33 @@ class TestFetchActionResources:
         mock_api = AsyncMock()
 
         # Mock the actions response with mixed action types
-        mock_api.get = AsyncMock(side_effect=[
-            # First call: get actions
-            {
-                "data": [
-                    {"id": "action-1", "attributes": {"name": "Build", "actionType": "BUILD"}},
-                    {"id": "action-2", "attributes": {"name": "Test", "actionType": "TEST"}},
-                    {"id": "action-3", "attributes": {"name": "Archive", "actionType": "ARCHIVE"}},
-                ],
-                "meta": {"paging": {"total": 3}}
-            },
-            # Second call: get resources for TEST action only
-            {
-                "data": [{"id": "test-result-1", "type": "ciTestResults"}],
-                "meta": {"paging": {"total": 1}}
-            },
-        ])
+        mock_api.get = AsyncMock(
+            side_effect=[
+                # First call: get actions
+                {
+                    "data": [
+                        {
+                            "id": "action-1",
+                            "attributes": {"name": "Build", "actionType": "BUILD"},
+                        },
+                        {
+                            "id": "action-2",
+                            "attributes": {"name": "Test", "actionType": "TEST"},
+                        },
+                        {
+                            "id": "action-3",
+                            "attributes": {"name": "Archive", "actionType": "ARCHIVE"},
+                        },
+                    ],
+                    "meta": {"paging": {"total": 3}},
+                },
+                # Second call: get resources for TEST action only
+                {
+                    "data": [{"id": "test-result-1", "type": "ciTestResults"}],
+                    "meta": {"paging": {"total": 1}},
+                },
+            ]
+        )
 
         # Filter to only TEST actions
         def is_test_action(action):
@@ -164,10 +193,9 @@ class TestFetchActionResources:
     async def test_fetch_action_resources_handles_empty_actions(self):
         """Test resource fetching handles builds with no actions gracefully."""
         mock_api = AsyncMock()
-        mock_api.get = AsyncMock(return_value={
-            "data": [],
-            "meta": {"paging": {"total": 0}}
-        })
+        mock_api.get = AsyncMock(
+            return_value={"data": [], "meta": {"paging": {"total": 0}}}
+        )
 
         result = await _fetch_action_resources(
             api=mock_api,

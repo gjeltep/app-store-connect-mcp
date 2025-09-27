@@ -77,7 +77,7 @@ async def list_builds(
     else:
         raise ValidationError(
             "Missing required parameter: either product_id or workflow_id must be provided",
-            details={"product_id": product_id, "workflow_id": workflow_id}
+            details={"product_id": product_id, "workflow_id": workflow_id},
         )
 
     # Build query with common parameters
@@ -159,7 +159,9 @@ async def _fetch_action_resources(
 
         if action_id:
             # Get resources for this specific action
-            resource_endpoint = f"/v1/ciBuildActions/{action_id}/{resource_endpoint_suffix}"
+            resource_endpoint = (
+                f"/v1/ciBuildActions/{action_id}/{resource_endpoint_suffix}"
+            )
             resource_query = (
                 APIQueryBuilder(resource_endpoint)
                 .with_limit_and_sort(limit)
@@ -266,6 +268,7 @@ async def list_test_results(
     limit: int = 100,
 ) -> Dict[str, Any]:
     """List test results for a build."""
+
     # Filter to only process TEST actions
     def is_test_action(action: Dict) -> bool:
         action_type = action.get("attributes", {}).get("actionType")
