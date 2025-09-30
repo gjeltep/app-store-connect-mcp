@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  lint:
-    name: Lint
+  quality:
+    name: Code Quality & Security
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,13 +24,43 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: uv pip install --system -e ".[dev]"
+        run: uv sync --extra dev
 
       - name: Run ruff check
-        run: ruff check src/ tests/
+        run: uv run ruff check src/ tests/
 
       - name: Run ruff format check
-        run: ruff format --check src/ tests/
+        run: uv run ruff format --check src/ tests/
+
+      - name: Validate server.json
+        run: uv run --with jsonschema --with httpx python scripts/validate_server_json.py
+
+      - name: Check for sensitive files in repo
+        run: |
+          if find . -name ".env" -not -name ".env.example" | grep -q .; then
+            echo "ERROR: Found .env files in repository!"
+            exit 1
+          fi
+          if find . -name "*.p8" | grep -q .; then
+            echo "ERROR: Found .p8 private key files in repository!"
+            exit 1
+          fi
+          echo "✓ No sensitive files found"
+
+      - name: Build package
+        run: uv build
+
+      - name: Check build artifacts for sensitive files
+        run: |
+          if tar -tzf dist/*.tar.gz | grep -E "\.env$|\.p8$"; then
+            echo "ERROR: Found sensitive files in sdist!"
+            exit 1
+          fi
+          if unzip -l dist/*.whl | grep -E "\.env$|\.p8$"; then
+            echo "ERROR: Found sensitive files in wheel!"
+            exit 1
+          fi
+          echo "✓ Build artifacts are clean"
 
   test:
     name: Test (Python ${{ matrix.python-version }})
@@ -52,13 +82,13 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: uv pip install --system -e ".[dev]"
+        run: uv sync --extra dev
 
       - name: Run tests
-        run: pytest tests/ -v --tb=short
+        run: uv run pytest tests/ -v --tb=short
 
-  config-validation:
-    name: Config Validation
+  config:
+    name: Configuration Validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -74,9 +104,9 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies with env support
-        run: uv pip install --system -e ".[env]"
+        run: uv sync --extra env
 
-      - name: Create mock .env file
+      - name: Create test fixtures
         run: |
           cat > .env.test << EOF
           APP_STORE_KEY_ID=test-key-id-123
@@ -85,97 +115,20 @@ jobs:
           APP_STORE_APP_ID=test-app-id
           APP_STORE_KEY_TYPE=team
           EOF
-
-      - name: Create mock private key file
-        run: |
           mkdir -p /tmp
-          echo "-----BEGIN PRIVATE KEY-----" > /tmp/test.p8
-          echo "test-key-content" >> /tmp/test.p8
-          echo "-----END PRIVATE KEY-----" >> /tmp/test.p8
+          cat > /tmp/test.p8 << EOF
+          -----BEGIN PRIVATE KEY-----
+          test-key-content
+          -----END PRIVATE KEY-----
+          EOF
 
       - name: Test config validation passes with valid config
         run: app-store-connect-mcp-dev --env-file .env.test --validate-only
 
       - name: Test config validation fails with missing config
         run: |
-          # Should fail when required vars are missing
           if app-store-connect-mcp-dev --validate-only 2>/dev/null; then
             echo "ERROR: Config validation should have failed with missing vars"
             exit 1
           fi
-          echo "Config validation correctly failed with missing vars"
-
-  validate-server-json:
-    name: Validate server.json
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          enable-cache: true
-
-      - name: Validate server.json against schema
-        run: |
-          uv run --with jsonschema --with httpx python scripts/validate_server_json.py
-
-  security-check:
-    name: Security Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Check for accidentally committed .env files
-        run: |
-          if find . -name ".env" -not -name ".env.example" | grep -q .; then
-            echo "ERROR: Found .env files in repository!"
-            find . -name ".env" -not -name ".env.example"
-            exit 1
-          fi
-          echo "No .env files found (except .env.example)"
-
-      - name: Check for accidentally committed private keys
-        run: |
-          if find . -name "*.p8" | grep -q .; then
-            echo "ERROR: Found .p8 private key files in repository!"
-            find . -name "*.p8"
-            exit 1
-          fi
-          echo "No .p8 files found"
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          enable-cache: true
-
-      - name: Build package
-        run: uv build
-
-      - name: Check build artifacts for sensitive files
-        run: |
-          echo "Checking sdist..."
-          tar -tzf dist/*.tar.gz | tee /tmp/sdist-contents.txt
-          if grep -E "\.env$|\.p8$" /tmp/sdist-contents.txt; then
-            echo "ERROR: Found sensitive files in sdist!"
-            exit 1
-          fi
-
-          echo "Checking wheel..."
-          unzip -l dist/*.whl | tee /tmp/wheel-contents.txt
-          if grep -E "\.env$|\.p8$" /tmp/wheel-contents.txt; then
-            echo "ERROR: Found sensitive files in wheel!"
-            exit 1
-          fi
-
-          echo "Build artifacts are clean - no sensitive files found"
+          echo "✓ Config validation correctly failed with missing vars"
