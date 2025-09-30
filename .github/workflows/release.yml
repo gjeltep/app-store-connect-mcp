@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build-and-publish:
-    name: Build and Publish to PyPI
+    name: Build and Publish
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -46,6 +46,23 @@ jobs:
           fi
           echo "Version check passed: $PYPROJECT_VERSION"
 
+      - name: Verify version in server.json matches tag
+        run: |
+          JSON_VERSION=$(grep '"version":' server.json | head -1 | sed 's/.*"version": "\(.*\)".*/\1/')
+          TAG_VERSION=${{ steps.version.outputs.tag_version }}
+          echo "server.json version: $JSON_VERSION"
+          echo "Git tag version: $TAG_VERSION"
+          if [ "$JSON_VERSION" != "$TAG_VERSION" ]; then
+            echo "ERROR: Version mismatch!"
+            echo "server.json has version $JSON_VERSION but tag is v$TAG_VERSION"
+            exit 1
+          fi
+          echo "Version check passed: $JSON_VERSION"
+
+      - name: Validate server.json
+        run: |
+          uv run --with jsonschema --with httpx python scripts/validate_server_json.py
+
       - name: Build package
         run: uv build
 
@@ -72,6 +89,20 @@ jobs:
         with:
           print-hash: true
 
+      - name: Install MCP Publisher
+        run: |
+          ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+          OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/download/v1.1.0/mcp-publisher_1.1.0_${OS}_${ARCH}.tar.gz" | tar xz
+          chmod +x mcp-publisher
+          ./mcp-publisher --version
+
+      - name: Login to MCP Registry
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        run: ./mcp-publisher publish
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -87,5 +118,6 @@ jobs:
             ## What's Changed
             See auto-generated release notes below.
 
-            ## PyPI
-            https://pypi.org/project/app-store-connect-mcp/${{ steps.version.outputs.tag_version }}/
+            ## Links
+            - **PyPI**: https://pypi.org/project/app-store-connect-mcp/${{ steps.version.outputs.tag_version }}/
+            - **MCP Registry**: https://registry.modelcontextprotocol.io

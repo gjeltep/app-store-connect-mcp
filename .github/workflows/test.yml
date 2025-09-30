@@ -105,6 +105,26 @@ jobs:
           fi
           echo "Config validation correctly failed with missing vars"
 
+  validate-server-json:
+    name: Validate server.json
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Validate server.json against schema
+        run: |
+          uv run --with jsonschema --with httpx python scripts/validate_server_json.py
+
   security-check:
     name: Security Check
     runs-on: ubuntu-latest

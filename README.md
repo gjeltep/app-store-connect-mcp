@@ -1,10 +1,8 @@
 ## App Store Connect MCP Server
 
-[![Test](https://github.com/gjeltep/app-store-connect-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/gjeltep/app-store-connect-mcp/actions/workflows/test.yml)
-[![PyPI](https://img.shields.io/pypi/v/app-store-connect-mcp.svg)](https://pypi.org/project/app-store-connect-mcp/)
-[![Python Version](https://img.shields.io/pypi/pyversions/app-store-connect-mcp.svg)](https://pypi.org/project/app-store-connect-mcp/)
+<!-- mcp-name: io.github.gjeltep/app-store-connect-mcp -->
 
-Talk to App Store Connect about your app. Modular tools, async I/O, and OpenAPI‑driven typing so your agent stays accurate as Apple evolves.
+Talk to App Store Connect about your app. Modular tools, async I/O, and OpenAPI‑driven typing keep your agent accurate as Apple evolves.
 
 ### Why this is different
 - **Spec‑aware**: Fields and enums are derived from Apple’s OpenAPI spec at runtime, reducing drift and surprise breakage.
@@ -13,28 +11,19 @@ Talk to App Store Connect about your app. Modular tools, async I/O, and OpenAPI�
 - **Modular domains**: Clean separation of tool schemas and handlers; add new domains without touching the core; optimized LLM discovery/ usage
 - **MCP‑native**: Stdio transport, capability declarations, and tool wiring align with the official SDK [python‑sdk README](https://github.com/modelcontextprotocol/python-sdk?tab=readme-ov-file).
 
-### Installation
+### Quick start
 
-#### From PyPI (Production)
-
-```bash
-pip install app-store-connect-mcp
-```
-
-#### From Source (Development)
+Install from source:
 
 ```bash
-# Clone the repository
 git clone https://github.com/gjeltep/app-store-connect-mcp.git
 cd app-store-connect-mcp
-
-# Install with development dependencies
 uv pip install -e ".[dev]"
 ```
 
 ### Configuration
 
-Set the following environment variables:
+Set these environment variables:
 
 ```bash
 # Required
@@ -49,26 +38,18 @@ export APP_STORE_KEY_TYPE="team"  # or "individual"
 
 ### Usage
 
-#### Production Mode (Recommended)
-
-Uses environment variables directly:
+Run with your environment variables set (recommended):
 
 ```bash
-# Set environment variables first (see Configuration above)
 app-store-connect-mcp
 ```
 
-#### Development Mode
-
-For development convenience, you can use a `.env` file:
+Or use a `.env` file during development:
 
 ```bash
 # Copy and configure .env file
 cp .env.example .env
 # Edit .env with your credentials
-
-# Install with env support
-uv pip install -e ".[env]"
 
 # Run with --env-file flag
 app-store-connect-mcp-dev --env-file .env
@@ -79,12 +60,8 @@ app-store-connect-mcp-dev --env-file .env --validate-only
 
 Use with any MCP‑compatible client; the server announces tools and handles calls over stdio.
 
-### Generate/update API models
-- Models are generated from Apple's official OpenAPI spec (fetched on demand).
-- Default source fetched from  [Apple](https://developer.apple.com/sample-code/app-store-connect/app-store-connect-openapi-specification.zip).
-- Override with `APP_STORE_CONNECT_OPENAPI_URL` to point to a local JSON spec.
-
-Generate:
+### Generate or update API models
+Models are generated from Apple's official OpenAPI spec. You can override the source with `APP_STORE_CONNECT_OPENAPI_URL`.
 
 ```bash
 uv pip install -e .[dev]
@@ -93,50 +70,9 @@ python scripts/generate_models.py
 
 ### Development
 
-#### Running Tests Locally
+See `CONTRIBUTING.md` for test, lint, formatting, and local tooling guidance.
 
-```bash
-# Install development dependencies
-uv pip install -e ".[dev]"
-
-# Run all tests
-pytest tests/ -v
-
-# Run linting
-ruff check src/ tests/
-
-# Run formatting check
-ruff format --check src/ tests/
-
-# Auto-fix formatting
-ruff format src/ tests/
-
-# Validate configuration
-app-store-connect-mcp-dev --env-file .env --validate-only
-```
-
-#### Release Process
-
-**For Maintainers:**
-
-1. **Update version** in `pyproject.toml`
-2. **Commit changes**: `git commit -am "Release v0.x.x"`
-3. **Create and push tag**: `git tag v0.x.x && git push origin v0.x.x`
-4. **GitHub Actions** will automatically:
-   - Run all tests and security checks
-   - Build the package
-   - Publish to PyPI via OIDC (Trusted Publishing)
-   - Create a GitHub Release with auto-generated notes
-
-**PyPI Trusted Publishing Setup** (one-time):
-- Go to https://pypi.org/manage/account/publishing/
-- Add GitHub as trusted publisher:
-  - Owner: `gjeltep`
-  - Repository: `app-store-connect-mcp`
-  - Workflow: `release.yml`
-  - Environment: (leave empty)
-
-No API tokens needed - OIDC handles authentication automatically!
+<!-- Publishing and registry details will be added once they are live. -->
 
 ### Tools
 
@@ -253,3 +189,7 @@ graph TD
 ### Credits
 Built on the official Model Context Protocol Python SDK — see the docs and examples in the
 [python‑sdk README](https://github.com/modelcontextprotocol/python-sdk?tab=readme-ov-file).
+
+—
+
+See `CONTRIBUTING.md` if you’d like to help.
