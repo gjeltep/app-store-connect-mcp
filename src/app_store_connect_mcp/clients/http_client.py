@@ -1,6 +1,7 @@
 """Base HTTP client with structured error handling."""
 
-from typing import Any, Dict, Optional
+from typing import Any
+
 import httpx
 
 from app_store_connect_mcp.core.errors import (
@@ -16,7 +17,7 @@ class BaseHTTPClient:
     def __init__(
         self,
         base_url: str,
-        headers: Optional[Dict[str, str]] = None,
+        headers: dict[str, str] | None = None,
         timeout: float = 30.0,
     ):
         self._client = httpx.AsyncClient(
@@ -29,9 +30,7 @@ class BaseHTTPClient:
         """Close the HTTP client."""
         await self._client.aclose()
 
-    async def _handle_response(
-        self, response: httpx.Response
-    ) -> Optional[Dict[str, Any]]:
+    async def _handle_response(self, response: httpx.Response) -> dict[str, Any] | None:
         """Process response and handle errors consistently."""
         if response.status_code >= 400:
             try:
@@ -48,7 +47,7 @@ class BaseHTTPClient:
 
     async def _execute_request(
         self, method: str, url_or_endpoint: str, **kwargs
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """Execute HTTP request with structured error handling."""
         context = {
             "method": method,
@@ -80,27 +79,19 @@ class BaseHTTPClient:
                 details=context,
             )
 
-    async def get(
-        self, endpoint: str, params: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    async def get(self, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """Execute GET request."""
         return await self._execute_request("GET", endpoint, params=params)
 
-    async def post(
-        self, endpoint: str, data: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    async def post(self, endpoint: str, data: dict[str, Any] | None = None) -> dict[str, Any]:
         """Execute POST request."""
         return await self._execute_request("POST", endpoint, json=data)
 
-    async def put(
-        self, endpoint: str, data: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    async def put(self, endpoint: str, data: dict[str, Any] | None = None) -> dict[str, Any]:
         """Execute PUT request."""
         return await self._execute_request("PUT", endpoint, json=data)
 
-    async def patch(
-        self, endpoint: str, data: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    async def patch(self, endpoint: str, data: dict[str, Any] | None = None) -> dict[str, Any]:
         """Execute PATCH request."""
         return await self._execute_request("PATCH", endpoint, json=data)
 

@@ -2,9 +2,8 @@
 
 import argparse
 import sys
-from typing import Optional
 
-from app_store_connect_mcp.config import load_config, validate_config, redact_secrets
+from app_store_connect_mcp.config import load_config, redact_secrets, validate_config
 
 
 def parse_args() -> argparse.Namespace:
@@ -72,6 +71,7 @@ def cli_main() -> None:
 
     # Import and run the server
     from app_store_connect_mcp.server import main
+
     main()
 
 

@@ -1,21 +1,20 @@
 from __future__ import annotations
 
-from typing import Optional, List, Dict, Any, TYPE_CHECKING
-
-from app_store_connect_mcp.models import (
-    BetaFeedbackCrashSubmissionsResponse,
-    BetaFeedbackCrashSubmissionResponse,
-)
+from typing import TYPE_CHECKING, Any
 
 from app_store_connect_mcp.core.base_handler import BaseHandler
-from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.core.filters import FilterEngine
+from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.core.response_handler import ResponseHandler
+from app_store_connect_mcp.models import (
+    BetaFeedbackCrashSubmissionResponse,
+    BetaFeedbackCrashSubmissionsResponse,
+)
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 
-FIELDS_BFCS: List[str] = [
+FIELDS_BFCS: list[str] = [
     "createdDate",
     "comment",
     "email",
@@ -60,17 +59,17 @@ class TestFlightHandler(BaseHandler):
         """Get the category name for TestFlight tools."""
         return "TestFlight"
 
-    def register_tools(self, mcp: "FastMCP") -> None:
+    def register_tools(self, mcp: FastMCP) -> None:
         """Register all TestFlight domain tools with the FastMCP server."""
 
         @mcp.tool()
         async def crashes_list(
-            app_id: Optional[str] = None,
-            filters: Optional[Dict] = None,
+            app_id: str | None = None,
+            filters: dict | None = None,
             sort: str = "-createdDate",
             limit: int = 50,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[TestFlight] List crash submissions from beta testers.
 
             Default limit is 25 due to large response size. Max 200. Use pagination metadata for additional pages.
@@ -81,21 +80,21 @@ class TestFlightHandler(BaseHandler):
 
         @mcp.tool()
         async def crashes_search(
-            app_id: Optional[str] = None,
-            app_platform: Optional[List[str]] = None,
-            device_platform: Optional[List[str]] = None,
-            os_min_version: Optional[str] = None,
-            os_max_version: Optional[str] = None,
-            os_versions: Optional[List[str]] = None,
-            device_model: Optional[List[str]] = None,
-            device_model_contains: Optional[List[str]] = None,
-            created_since_days: Optional[int] = None,
-            created_after: Optional[str] = None,
-            created_before: Optional[str] = None,
+            app_id: str | None = None,
+            app_platform: list[str] | None = None,
+            device_platform: list[str] | None = None,
+            os_min_version: str | None = None,
+            os_max_version: str | None = None,
+            os_versions: list[str] | None = None,
+            device_model: list[str] | None = None,
+            device_model_contains: list[str] | None = None,
+            created_since_days: int | None = None,
+            created_after: str | None = None,
+            created_before: str | None = None,
             limit: int = 25,
-            include: Optional[List[str]] = None,
+            include: list[str] | None = None,
             sort: str = "-createdDate",
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """[TestFlight] Search crash submissions with advanced filtering.
 
             Default limit is 25 due to large response size. Max 200. Use pagination metadata for additional pages.
@@ -120,8 +119,8 @@ class TestFlightHandler(BaseHandler):
         @mcp.tool()
         async def crashes_get_by_id(
             submission_id: str,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[TestFlight] Get detailed information about a specific crash submission."""
             return await self._get_crash_submission_details(
                 submission_id=submission_id, include=include
@@ -130,19 +129,19 @@ class TestFlightHandler(BaseHandler):
         @mcp.tool()
         async def crashes_get_log(
             submission_id: str,
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """[TestFlight] Get the raw crash log text for a specific crash submission."""
             return await self._get_crash_log(submission_id=submission_id)
 
     # ----- API calls -----
     async def _get_crash_submissions(
         self,
-        app_id: Optional[str] = None,
-        filters: Optional[Dict] = None,
+        app_id: str | None = None,
+        filters: dict | None = None,
         sort: str = "-createdDate",
         limit: int = 50,
-        include: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        include: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Get crash submissions for an app."""
         app_id = self.api.ensure_app_id(app_id)
         endpoint = f"/v1/apps/{app_id}/betaFeedbackCrashSubmissions"
@@ -161,21 +160,21 @@ class TestFlightHandler(BaseHandler):
 
     async def _search_crash_submissions(
         self,
-        app_id: Optional[str] = None,
-        app_platform: Optional[List[str]] = None,
-        device_platform: Optional[List[str]] = None,
-        os_min_version: Optional[str] = None,
-        os_max_version: Optional[str] = None,
-        os_versions: Optional[List[str]] = None,
-        device_model: Optional[List[str]] = None,
-        device_model_contains: Optional[List[str]] = None,
-        created_since_days: Optional[int] = None,
-        created_after: Optional[str] = None,
-        created_before: Optional[str] = None,
+        app_id: str | None = None,
+        app_platform: list[str] | None = None,
+        device_platform: list[str] | None = None,
+        os_min_version: str | None = None,
+        os_max_version: str | None = None,
+        os_versions: list[str] | None = None,
+        device_model: list[str] | None = None,
+        device_model_contains: list[str] | None = None,
+        created_since_days: int | None = None,
+        created_after: str | None = None,
+        created_before: str | None = None,
         limit: int = 25,
-        include: Optional[List[str]] = None,
+        include: list[str] | None = None,
         sort: str = "-createdDate",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Search crash submissions with advanced filtering."""
         app_id = self.api.ensure_app_id(app_id)
         endpoint = f"/v1/apps/{app_id}/betaFeedbackCrashSubmissions"
@@ -245,8 +244,8 @@ class TestFlightHandler(BaseHandler):
     async def _get_crash_submission_details(
         self,
         submission_id: str,
-        include: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        include: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Get detailed information about a specific crash submission."""
         endpoint = f"/v1/betaFeedbackCrashSubmissions/{submission_id}"
 
@@ -260,7 +259,7 @@ class TestFlightHandler(BaseHandler):
         # Execute and return
         return await query.execute(self.api, BetaFeedbackCrashSubmissionResponse)
 
-    async def _get_crash_log(self, submission_id: str) -> Dict[str, Any]:
+    async def _get_crash_log(self, submission_id: str) -> dict[str, Any]:
         """Get the raw crash log text for a specific submission."""
         # First get the crash submission with crashLog included
         endpoint = f"/v1/betaFeedbackCrashSubmissions/{submission_id}"

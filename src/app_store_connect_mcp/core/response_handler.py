@@ -1,6 +1,6 @@
 """Standardized response handling for API responses."""
 
-from typing import Dict, Any, List, Optional
+from typing import Any
 
 
 class ResponseHandler:
@@ -8,11 +8,11 @@ class ResponseHandler:
 
     @staticmethod
     def build_filtered_response(
-        filtered_data: List[Dict[str, Any]],
-        included: Optional[List[Dict[str, Any]]] = None,
+        filtered_data: list[dict[str, Any]],
+        included: list[dict[str, Any]] | None = None,
         endpoint: str = "",
-        limit: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        limit: int | None = None,
+    ) -> dict[str, Any]:
         """Build a standardized filtered response.
 
         Args:

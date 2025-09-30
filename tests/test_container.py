@@ -1,9 +1,11 @@
 """Tests for dependency injection container."""
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import patch, MagicMock
+
 from app_store_connect_mcp.core.container import Container
-from app_store_connect_mcp.core.protocols import APIClient, DomainHandler
+from app_store_connect_mcp.core.protocols import APIClient
 from tests.mocks import MockAPIClient, MockDomainHandler
 
 

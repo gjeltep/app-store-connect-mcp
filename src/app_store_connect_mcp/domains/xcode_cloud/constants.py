@@ -1,17 +1,16 @@
 """Constants and field definitions for Xcode Cloud domain."""
 
-from typing import List, Dict
 
 # -- FIELD DEFINITIONS --
 
 # Products and Workflows
-FIELDS_CI_PRODUCTS: List[str] = [
+FIELDS_CI_PRODUCTS: list[str] = [
     "name",
     "createdDate",
     "productType",
 ]
 
-FIELDS_CI_WORKFLOWS: List[str] = [
+FIELDS_CI_WORKFLOWS: list[str] = [
     "name",
     "description",
     "isEnabled",
@@ -21,7 +20,7 @@ FIELDS_CI_WORKFLOWS: List[str] = [
 ]
 
 # Build Runs
-FIELDS_CI_BUILD_RUNS: List[str] = [
+FIELDS_CI_BUILD_RUNS: list[str] = [
     "number",
     "createdDate",
     "startedDate",
@@ -37,21 +36,21 @@ FIELDS_CI_BUILD_RUNS: List[str] = [
 ]
 
 # Build Artifacts and Results
-FIELDS_CI_ARTIFACTS: List[str] = [
+FIELDS_CI_ARTIFACTS: list[str] = [
     "fileType",
     "fileName",
     "fileSize",
     "downloadUrl",
 ]
 
-FIELDS_CI_ISSUES: List[str] = [
+FIELDS_CI_ISSUES: list[str] = [
     "issueType",
     "message",
     "fileSource",
     "category",
 ]
 
-FIELDS_CI_TEST_RESULTS: List[str] = [
+FIELDS_CI_TEST_RESULTS: list[str] = [
     "className",
     "name",
     "status",
@@ -61,12 +60,12 @@ FIELDS_CI_TEST_RESULTS: List[str] = [
 ]
 
 # SCM Resources
-FIELDS_SCM_PROVIDERS: List[str] = [
+FIELDS_SCM_PROVIDERS: list[str] = [
     "scmProviderType",
     "url",
 ]
 
-FIELDS_SCM_REPOSITORIES: List[str] = [
+FIELDS_SCM_REPOSITORIES: list[str] = [
     "repositoryName",
     "ownerName",
     "httpCloneUrl",
@@ -74,7 +73,7 @@ FIELDS_SCM_REPOSITORIES: List[str] = [
     "lastAccessedDate",
 ]
 
-FIELDS_SCM_PULL_REQUESTS: List[str] = [
+FIELDS_SCM_PULL_REQUESTS: list[str] = [
     "title",
     "number",
     "webUrl",
@@ -88,7 +87,7 @@ FIELDS_SCM_PULL_REQUESTS: List[str] = [
     "isCrossRepository",
 ]
 
-FIELDS_SCM_GIT_REFERENCES: List[str] = [
+FIELDS_SCM_GIT_REFERENCES: list[str] = [
     "name",
     "canonicalName",
     "isDeleted",
@@ -98,15 +97,15 @@ FIELDS_SCM_GIT_REFERENCES: List[str] = [
 # -- FILTER MAPPINGS --
 
 # Filter mappings for server-side filtering
-PRODUCT_FILTER_MAPPING: Dict[str, str] = {
+PRODUCT_FILTER_MAPPING: dict[str, str] = {
     "product_type": "productType",
 }
 
-WORKFLOW_FILTER_MAPPING: Dict[str, str] = {
+WORKFLOW_FILTER_MAPPING: dict[str, str] = {
     "is_enabled": "isEnabled",
 }
 
-BUILD_FILTER_MAPPING: Dict[str, str] = {
+BUILD_FILTER_MAPPING: dict[str, str] = {
     "execution_progress": "executionProgress",
     "completion_status": "completionStatus",
     "is_pull_request_build": "isPullRequestBuild",

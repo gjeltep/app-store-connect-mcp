@@ -1,7 +1,7 @@
 """Structured error handling for App Store Connect MCP server."""
 
-from typing import Optional, Dict, Any
 from enum import Enum
+from typing import Any
 
 
 class ErrorCategory(Enum):
@@ -24,9 +24,9 @@ class AppStoreConnectError(Exception):
         self,
         message: str,
         category: ErrorCategory = ErrorCategory.API_ERROR,
-        status_code: Optional[int] = None,
-        details: Optional[Dict[str, Any]] = None,
-        user_message: Optional[str] = None,
+        status_code: int | None = None,
+        details: dict[str, Any] | None = None,
+        user_message: str | None = None,
     ):
         self.message = message
         self.category = category
@@ -49,7 +49,7 @@ class AppStoreConnectError(Exception):
         }
         return category_messages.get(self.category, self.message)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert error to structured dictionary for MCP responses."""
         return {
             "error": {
@@ -112,12 +112,10 @@ class ConfigurationError(AppStoreConnectError):
 
 
 def handle_http_error(
-    status_code: int, response_body: Optional[Dict[str, Any]] = None
+    status_code: int, response_body: dict[str, Any] | None = None
 ) -> AppStoreConnectError:
     """Map HTTP status codes to appropriate exceptions."""
-    error_message = (
-        response_body.get("errors", [{}])[0].get("detail", "") if response_body else ""
-    )
+    error_message = response_body.get("errors", [{}])[0].get("detail", "") if response_body else ""
 
     if status_code == 401:
         return AuthenticationError(

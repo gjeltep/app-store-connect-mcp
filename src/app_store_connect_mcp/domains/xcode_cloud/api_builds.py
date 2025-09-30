@@ -1,33 +1,33 @@
 """XcodeCloud build API operations."""
 
-from typing import Optional, List, Dict, Any, Callable
+from collections.abc import Callable
+from typing import Any
 
-from app_store_connect_mcp.models import (
-    CiBuildRunsResponse,
-    CiBuildRunResponse,
-    CiBuildRunCreateRequest,
-)
-from app_store_connect_mcp.core.query_builder import APIQueryBuilder
-from app_store_connect_mcp.core.protocols import APIClient
 from app_store_connect_mcp.core.errors import ValidationError
+from app_store_connect_mcp.core.protocols import APIClient
+from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.domains.xcode_cloud.constants import (
-    FIELDS_CI_BUILD_RUNS,
+    BUILD_FILTER_MAPPING,
     FIELDS_CI_ARTIFACTS,
+    FIELDS_CI_BUILD_RUNS,
     FIELDS_CI_ISSUES,
     FIELDS_CI_TEST_RESULTS,
-    BUILD_FILTER_MAPPING,
+)
+from app_store_connect_mcp.models import (
+    CiBuildRunResponse,
+    CiBuildRunsResponse,
 )
 
 
 async def list_builds(
     api: APIClient,
-    product_id: Optional[str] = None,
-    workflow_id: Optional[str] = None,
-    filters: Optional[Dict] = None,
+    product_id: str | None = None,
+    workflow_id: str | None = None,
+    filters: dict | None = None,
     sort: str = "-number",
     limit: int = 50,
-    include: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    include: list[str] | None = None,
+) -> dict[str, Any]:
     """List builds for a product or workflow."""
     # Determine the appropriate endpoint
     if workflow_id:
@@ -55,8 +55,8 @@ async def list_builds(
 async def get_build(
     api: APIClient,
     build_id: str,
-    include: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    include: list[str] | None = None,
+) -> dict[str, Any]:
     """Get detailed information about a specific build."""
     endpoint = f"/v1/ciBuildRuns/{build_id}"
 
@@ -74,11 +74,11 @@ async def _fetch_action_resources(
     build_id: str,
     resource_endpoint_suffix: str,
     resource_fields_name: str,
-    resource_fields: List[str],
-    action_fields: List[str],
+    resource_fields: list[str],
+    action_fields: list[str],
     limit: int,
-    filter_actions: Optional[Callable[[Dict], bool]] = None,
-) -> Dict[str, Any]:
+    filter_actions: Callable[[dict], bool] | None = None,
+) -> dict[str, Any]:
     """Helper to fetch resources from build actions:
 
     1. Fetching all actions for a build
@@ -116,9 +116,7 @@ async def _fetch_action_resources(
             continue
 
         if action_id:
-            resource_endpoint = (
-                f"/v1/ciBuildActions/{action_id}/{resource_endpoint_suffix}"
-            )
+            resource_endpoint = f"/v1/ciBuildActions/{action_id}/{resource_endpoint_suffix}"
             resource_query = (
                 APIQueryBuilder(resource_endpoint)
                 .with_limit_and_sort(limit)
@@ -146,9 +144,9 @@ async def _fetch_action_resources(
 async def start_build(
     api: APIClient,
     workflow_id: str,
-    source_branch_or_tag: Optional[str] = None,
-    pull_request_number: Optional[int] = None,
-) -> Dict[str, Any]:
+    source_branch_or_tag: str | None = None,
+    pull_request_number: int | None = None,
+) -> dict[str, Any]:
     """Start a new build for a workflow."""
     endpoint = "/v1/ciBuildRuns"
 
@@ -156,9 +154,7 @@ async def start_build(
     request_data = {
         "data": {
             "type": "ciBuildRuns",
-            "relationships": {
-                "workflow": {"data": {"type": "ciWorkflows", "id": workflow_id}}
-            },
+            "relationships": {"workflow": {"data": {"type": "ciWorkflows", "id": workflow_id}}},
         }
     }
 
@@ -188,7 +184,7 @@ async def list_artifacts(
     api: APIClient,
     build_id: str,
     limit: int = 50,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """List artifacts for a build."""
     return await _fetch_action_resources(
         api=api,
@@ -205,7 +201,7 @@ async def list_issues(
     api: APIClient,
     build_id: str,
     limit: int = 100,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """List issues for a build."""
     return await _fetch_action_resources(
         api=api,
@@ -222,11 +218,11 @@ async def list_test_results(
     api: APIClient,
     build_id: str,
     limit: int = 100,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """List test results for a build."""
 
     # Filter to only process TEST actions
-    def is_test_action(action: Dict) -> bool:
+    def is_test_action(action: dict) -> bool:
         action_type = action.get("attributes", {}).get("actionType")
         return action_type and "TEST" in str(action_type).upper()
 

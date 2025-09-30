@@ -1,7 +1,7 @@
 """Abstract base classes for dependency inversion."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, List, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 # Avoid circular import - FastMCP only needed for type hints, not runtime
 if TYPE_CHECKING:
@@ -12,16 +12,12 @@ class APIClient(ABC):
     """Abstract API client interface."""
 
     @abstractmethod
-    async def get(
-        self, endpoint: str, params: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    async def get(self, endpoint: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         """Execute GET request."""
         pass
 
     @abstractmethod
-    async def post(
-        self, endpoint: str, data: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    async def post(self, endpoint: str, data: dict[str, Any] | None = None) -> dict[str, Any]:
         """Execute POST request."""
         pass
 
@@ -31,18 +27,18 @@ class APIClient(ABC):
         pass
 
     @abstractmethod
-    async def get_url(self, url: str) -> Dict[str, Any]:
+    async def get_url(self, url: str) -> dict[str, Any]:
         """Get a specific URL."""
         pass
 
     @property
     @abstractmethod
-    def default_app_id(self) -> Optional[str]:
+    def default_app_id(self) -> str | None:
         """Default app ID for operations."""
         pass
 
     @abstractmethod
-    def ensure_app_id(self, app_id: Optional[str]) -> str:
+    def ensure_app_id(self, app_id: str | None) -> str:
         """Ensure we have a valid app_id, using the default if needed.
 
         Args:

@@ -1,21 +1,20 @@
 from __future__ import annotations
 
-from typing import Optional, List, Dict, Any, TYPE_CHECKING
-
-from app_store_connect_mcp.models import (
-    CustomerReviewsResponse,
-    CustomerReviewResponse,
-)
+from typing import TYPE_CHECKING, Any
 
 from app_store_connect_mcp.core.base_handler import BaseHandler
-from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.core.filters import FilterEngine
+from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.core.response_handler import ResponseHandler
+from app_store_connect_mcp.models import (
+    CustomerReviewResponse,
+    CustomerReviewsResponse,
+)
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
 
-FIELDS_CUSTOMER_REVIEWS: List[str] = [
+FIELDS_CUSTOMER_REVIEWS: list[str] = [
     "rating",
     "title",
     "body",
@@ -40,17 +39,17 @@ class AppHandler(BaseHandler):
         """Get the category name for App tools."""
         return "App"
 
-    def register_tools(self, mcp: "FastMCP") -> None:
+    def register_tools(self, mcp: FastMCP) -> None:
         """Register all App domain tools with the FastMCP server."""
 
         @mcp.tool()
         async def reviews_list(
-            app_id: Optional[str] = None,
-            filters: Optional[Dict] = None,
+            app_id: str | None = None,
+            filters: dict | None = None,
             sort: str = "-createdDate",
             limit: int = 50,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[App] List customer reviews for an app."""
             return await self._list_customer_reviews(
                 app_id=app_id, filters=filters, sort=sort, limit=limit, include=include
@@ -59,28 +58,28 @@ class AppHandler(BaseHandler):
         @mcp.tool()
         async def reviews_get(
             review_id: str,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[App] Get detailed information about a specific customer review."""
             return await self._get_customer_review(review_id=review_id, include=include)
 
         @mcp.tool()
         async def reviews_search(
-            app_id: Optional[str] = None,
-            rating: Optional[List[int]] = None,
-            min_rating: Optional[int] = None,
-            max_rating: Optional[int] = None,
-            territory: Optional[List[str]] = None,
-            territory_contains: Optional[List[str]] = None,
-            created_since_days: Optional[int] = None,
-            created_after: Optional[str] = None,
-            created_before: Optional[str] = None,
-            body_contains: Optional[List[str]] = None,
-            title_contains: Optional[List[str]] = None,
+            app_id: str | None = None,
+            rating: list[int] | None = None,
+            min_rating: int | None = None,
+            max_rating: int | None = None,
+            territory: list[str] | None = None,
+            territory_contains: list[str] | None = None,
+            created_since_days: int | None = None,
+            created_after: str | None = None,
+            created_before: str | None = None,
+            body_contains: list[str] | None = None,
+            title_contains: list[str] | None = None,
             limit: int = 50,
-            include: Optional[List[str]] = None,
+            include: list[str] | None = None,
             sort: str = "-createdDate",
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """[App] Search customer reviews with advanced filtering."""
             return await self._search_customer_reviews(
                 app_id=app_id,
@@ -102,12 +101,12 @@ class AppHandler(BaseHandler):
     # ----- API calls -----
     async def _list_customer_reviews(
         self,
-        app_id: Optional[str] = None,
-        filters: Optional[Dict] = None,
+        app_id: str | None = None,
+        filters: dict | None = None,
         sort: str = "-createdDate",
         limit: int = 50,
-        include: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        include: list[str] | None = None,
+    ) -> dict[str, Any]:
         """List customer reviews for an app."""
         app_id = self.api.ensure_app_id(app_id)
         endpoint = f"/v1/apps/{app_id}/customerReviews"
@@ -127,8 +126,8 @@ class AppHandler(BaseHandler):
     async def _get_customer_review(
         self,
         review_id: str,
-        include: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        include: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Get detailed information about a specific customer review."""
         endpoint = f"/v1/customerReviews/{review_id}"
 
@@ -144,21 +143,21 @@ class AppHandler(BaseHandler):
 
     async def _search_customer_reviews(
         self,
-        app_id: Optional[str] = None,
-        rating: Optional[List[int]] = None,
-        min_rating: Optional[int] = None,
-        max_rating: Optional[int] = None,
-        territory: Optional[List[str]] = None,
-        territory_contains: Optional[List[str]] = None,
-        created_since_days: Optional[int] = None,
-        created_after: Optional[str] = None,
-        created_before: Optional[str] = None,
-        body_contains: Optional[List[str]] = None,
-        title_contains: Optional[List[str]] = None,
+        app_id: str | None = None,
+        rating: list[int] | None = None,
+        min_rating: int | None = None,
+        max_rating: int | None = None,
+        territory: list[str] | None = None,
+        territory_contains: list[str] | None = None,
+        created_since_days: int | None = None,
+        created_after: str | None = None,
+        created_before: str | None = None,
+        body_contains: list[str] | None = None,
+        title_contains: list[str] | None = None,
         limit: int = 50,
-        include: Optional[List[str]] = None,
+        include: list[str] | None = None,
         sort: str = "-createdDate",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Search customer reviews with advanced filtering."""
         app_id = self.api.ensure_app_id(app_id)
         endpoint = f"/v1/apps/{app_id}/customerReviews"

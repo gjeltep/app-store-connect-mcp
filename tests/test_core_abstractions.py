@@ -1,14 +1,14 @@
 """Tests for core architectural abstractions."""
 
+from datetime import UTC, datetime, timezone
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, AsyncMock, patch
-from datetime import datetime, timezone, timedelta
 
 from app_store_connect_mcp.core.base_handler import BaseHandler
-from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.core.filters import FilterEngine
+from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.core.response_handler import ResponseHandler
-from app_store_connect_mcp.core.errors import ValidationError, AppStoreConnectError
 
 
 class TestBaseHandler:
@@ -94,9 +94,7 @@ class TestAPIQueryBuilder:
 
     def test_with_fields(self):
         """Test field selection."""
-        builder = APIQueryBuilder("/v1/test").with_fields(
-            "reviews", ["rating", "title", "body"]
-        )
+        builder = APIQueryBuilder("/v1/test").with_fields("reviews", ["rating", "title", "body"])
 
         assert builder.params["fields[reviews]"] == "rating,title,body"
 
@@ -129,9 +127,7 @@ class TestAPIQueryBuilder:
         builder = APIQueryBuilder("/v1/test").with_limit_and_sort(50, "-date")
         result = await builder.execute(mock_api)
 
-        mock_api.get.assert_called_once_with(
-            "/v1/test", params={"sort": "-date", "limit": 50}
-        )
+        mock_api.get.assert_called_once_with("/v1/test", params={"sort": "-date", "limit": 50})
         assert result == {"data": []}
 
 
@@ -190,9 +186,7 @@ class TestFilterEngine:
     def test_filter_by_text_contains(self, sample_data):
         """Test text contains filtering."""
         engine = FilterEngine(sample_data)
-        result = engine.filter_by_text_contains(
-            "attributes.body", ["bug", "crash"]
-        ).apply()
+        result = engine.filter_by_text_contains("attributes.body", ["bug", "crash"]).apply()
 
         assert len(result) == 2
         assert result[0]["id"] == "2"
@@ -234,13 +228,11 @@ class TestFilterEngine:
         """Test filtering by days ago."""
         # Mock current time
         with patch("app_store_connect_mcp.core.filters.datetime") as mock_datetime:
-            mock_datetime.now.return_value = datetime(2024, 1, 21, tzinfo=timezone.utc)
+            mock_datetime.now.return_value = datetime(2024, 1, 21, tzinfo=UTC)
             mock_datetime.timezone = timezone
 
             engine = FilterEngine(sample_data)
-            result = engine.filter_by_date_range(
-                "attributes.createdDate", since_days=7
-            ).apply()
+            result = engine.filter_by_date_range("attributes.createdDate", since_days=7).apply()
 
             assert len(result) == 2  # Items from last 7 days
 

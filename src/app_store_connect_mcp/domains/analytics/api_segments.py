@@ -1,12 +1,12 @@
 """Analytics Report Segments API operations."""
 
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 from app_store_connect_mcp.core.protocols import APIClient
 from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.models import (
-    AnalyticsReportSegmentsResponse,
     AnalyticsReportSegmentResponse,
+    AnalyticsReportSegmentsResponse,
 )
 
 # Field definitions
@@ -23,8 +23,8 @@ class AnalyticsSegmentsAPI:
         self,
         instance_id: str,
         limit: int = 100,
-        include: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        include: list[str] | None = None,
+    ) -> dict[str, Any]:
         """List segments for a specific analytics report instance."""
         endpoint = f"/v1/analyticsReportInstances/{instance_id}/segments"
 
@@ -42,8 +42,8 @@ class AnalyticsSegmentsAPI:
     async def get_segment(
         self,
         segment_id: str,
-        include: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        include: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Get detailed information about a specific analytics report segment."""
         endpoint = f"/v1/analyticsReportSegments/{segment_id}"
 

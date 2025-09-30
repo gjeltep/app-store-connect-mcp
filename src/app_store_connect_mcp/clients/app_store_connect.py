@@ -1,24 +1,24 @@
 import os
 import time
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import jwt
 
-from app_store_connect_mcp.core.errors import ConfigurationError, AuthenticationError
 from app_store_connect_mcp.clients.http_client import BaseHTTPClient
-from app_store_connect_mcp.core.protocols import APIClient
 from app_store_connect_mcp.core.constants import (
-    JWT_TTL_SECONDS,
-    JWT_EARLY_RENEWAL_SECONDS,
     JWT_AUDIENCE,
+    JWT_EARLY_RENEWAL_SECONDS,
+    JWT_TTL_SECONDS,
 )
+from app_store_connect_mcp.core.errors import AuthenticationError, ConfigurationError
+from app_store_connect_mcp.core.protocols import APIClient
 
 
 class AppStoreConnectAPI(BaseHTTPClient, APIClient):
     """Async App Store Connect API client."""
 
-    def __init__(self, config: Optional[Dict[str, Optional[str]]] = None):
+    def __init__(self, config: dict[str, str | None] | None = None):
         # Load from config dict if provided, otherwise from environment
         if config:
             self.key_id = config.get("APP_STORE_KEY_ID")
@@ -39,9 +39,9 @@ class AppStoreConnectAPI(BaseHTTPClient, APIClient):
             self.subject = os.getenv("APP_STORE_SUBJECT")
 
         # JWT Configuration
-        self._private_key_cache: Optional[str] = None
-        self._cached_token: Optional[str] = None
-        self._cached_token_expiry: Optional[datetime] = None
+        self._private_key_cache: str | None = None
+        self._cached_token: str | None = None
+        self._cached_token_expiry: datetime | None = None
 
         # Validate required configuration
         if not all([self.key_id, self.issuer_id, self.private_key_path]):
@@ -73,7 +73,7 @@ class AppStoreConnectAPI(BaseHTTPClient, APIClient):
         if not self.private_key_path:
             raise ConfigurationError("APP_STORE_PRIVATE_KEY_PATH is not set")
         try:
-            with open(self.private_key_path, "r", encoding="utf-8") as f:
+            with open(self.private_key_path, encoding="utf-8") as f:
                 self._private_key_cache = f.read()
             return self._private_key_cache
         except FileNotFoundError as e:
@@ -93,12 +93,11 @@ class AppStoreConnectAPI(BaseHTTPClient, APIClient):
         Caches the token until shortly before expiration to avoid re-signing on every request.
         """
         # Return cached token if still valid
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         if (
             self._cached_token
             and self._cached_token_expiry
-            and now
-            < self._cached_token_expiry - timedelta(seconds=JWT_EARLY_RENEWAL_SECONDS)
+            and now < self._cached_token_expiry - timedelta(seconds=JWT_EARLY_RENEWAL_SECONDS)
         ):
             return self._cached_token
 
@@ -168,15 +167,15 @@ class AppStoreConnectAPI(BaseHTTPClient, APIClient):
 
         # Cache token and expiry
         self._cached_token = token
-        self._cached_token_expiry = datetime.fromtimestamp(expires_at, tz=timezone.utc)
+        self._cached_token_expiry = datetime.fromtimestamp(expires_at, tz=UTC)
         return token
 
     @property
-    def default_app_id(self) -> Optional[str]:
+    def default_app_id(self) -> str | None:
         """Default app ID for operations."""
         return self._default_app_id
 
-    def ensure_app_id(self, app_id: Optional[str]) -> str:
+    def ensure_app_id(self, app_id: str | None) -> str:
         """Ensure we have a valid app_id, using the default if needed.
 
         Args:
@@ -199,7 +198,7 @@ class AppStoreConnectAPI(BaseHTTPClient, APIClient):
             )
         return app_id
 
-    async def get_url(self, url: str) -> Dict[str, Any]:
+    async def get_url(self, url: str) -> dict[str, Any]:
         """Get a specific URL (for pagination links)."""
         return await self._execute_request("GET", url)
 
@@ -208,10 +207,10 @@ class AppStoreConnectAPI(BaseHTTPClient, APIClient):
         method: str,
         url_or_endpoint: str,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Attach Authorization header with fresh JWT and delegate to base client."""
         # Ensure Authorization header is present and fresh
-        request_headers: Dict[str, str] = {}
+        request_headers: dict[str, str] = {}
         if "headers" in kwargs and kwargs["headers"]:
             # Make a shallow copy to avoid mutating caller's dict
             request_headers = dict(kwargs.pop("headers"))

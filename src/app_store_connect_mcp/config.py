@@ -2,10 +2,9 @@
 
 import os
 from pathlib import Path
-from typing import Dict, Optional
 
 
-def load_config(env_file: Optional[str] = None) -> Dict[str, Optional[str]]:
+def load_config(env_file: str | None = None) -> dict[str, str | None]:
     """Load configuration from environment variables or optional .env file.
 
     Args:
@@ -23,6 +22,7 @@ def load_config(env_file: Optional[str] = None) -> Dict[str, Optional[str]]:
     if env_file:
         try:
             from dotenv import load_dotenv
+
             load_dotenv(env_file)
         except ImportError:
             # python-dotenv not installed - continue with system env vars
@@ -42,7 +42,7 @@ def load_config(env_file: Optional[str] = None) -> Dict[str, Optional[str]]:
     return config
 
 
-def validate_config(config: Dict[str, Optional[str]]) -> None:
+def validate_config(config: dict[str, str | None]) -> None:
     """Validate that required configuration values are present.
 
     Args:
@@ -74,7 +74,7 @@ def validate_config(config: Dict[str, Optional[str]]) -> None:
         )
 
 
-def redact_secrets(config: Dict[str, Optional[str]]) -> Dict[str, str]:
+def redact_secrets(config: dict[str, str | None]) -> dict[str, str]:
     """Create a redacted version of config for safe logging.
 
     Args:

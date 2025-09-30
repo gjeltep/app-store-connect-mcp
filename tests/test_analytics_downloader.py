@@ -1,17 +1,18 @@
 """Tests for analytics data downloader."""
 
-import pytest
 import gzip
 import io
 import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
-import httpx
 
+import httpx
+import pytest
+
+from app_store_connect_mcp.core.errors import AppStoreConnectError, NetworkError
 from app_store_connect_mcp.domains.analytics.data_downloader import (
     AnalyticsDataDownloader,
 )
-from app_store_connect_mcp.core.errors import NetworkError, AppStoreConnectError
 
 
 class TestAnalyticsDataDownloader:
@@ -45,9 +46,7 @@ class TestAnalyticsDataDownloader:
             mock_response.raise_for_status = Mock()
             mock_get.return_value = mock_response
 
-            result = await downloader.download_segment(
-                "https://s3.example.com/segment.gz"
-            )
+            result = await downloader.download_segment("https://s3.example.com/segment.gz")
 
             assert result == gzipped_tsv_data
             mock_get.assert_called_once_with("https://s3.example.com/segment.gz")
@@ -94,9 +93,7 @@ class TestAnalyticsDataDownloader:
             assert result == sample_tsv_data
 
     @pytest.mark.asyncio
-    async def test_download_and_decompress_not_gzipped(
-        self, downloader, sample_tsv_data
-    ):
+    async def test_download_and_decompress_not_gzipped(self, downloader, sample_tsv_data):
         """Test handling non-gzipped content."""
         with patch.object(downloader, "download_segment") as mock_download:
             mock_download.return_value = sample_tsv_data.encode("utf-8")
@@ -119,9 +116,7 @@ class TestAnalyticsDataDownloader:
                     "https://s3.example.com/segment.bin"
                 )
 
-            assert "Segment data is not valid text or gzipped text" in str(
-                exc_info.value
-            )
+            assert "Segment data is not valid text or gzipped text" in str(exc_info.value)
 
     @pytest.mark.asyncio
     async def test_download_segments_to_file_no_segments(self, downloader):
@@ -158,9 +153,7 @@ class TestAnalyticsDataDownloader:
         # Second segment data (without header)
         segment2_data = "2025-01-03\tMyApp\t200\tGBR"
 
-        with patch.object(
-            downloader, "download_and_decompress_segment"
-        ) as mock_download:
+        with patch.object(downloader, "download_and_decompress_segment") as mock_download:
             # Return different data for each segment
             mock_download.side_effect = [
                 sample_tsv_data,
@@ -177,7 +170,7 @@ class TestAnalyticsDataDownloader:
             assert result["errors"] is None
 
             # Read the file and verify content
-            with open(result["file_path"], "r") as f:
+            with open(result["file_path"]) as f:
                 lines = f.readlines()
                 assert len(lines) == 4  # 1 header + 3 data rows
                 assert lines[0].strip() == "Date\tApp Name\tDownloads\tTerritory"
@@ -186,9 +179,7 @@ class TestAnalyticsDataDownloader:
             Path(result["file_path"]).unlink()
 
     @pytest.mark.asyncio
-    async def test_download_segments_to_file_custom_path(
-        self, downloader, sample_tsv_data
-    ):
+    async def test_download_segments_to_file_custom_path(self, downloader, sample_tsv_data):
         """Test downloading to a custom file path."""
         segments = [{"attributes": {"url": "https://s3.example.com/segment1.gz"}}]
 
@@ -196,9 +187,7 @@ class TestAnalyticsDataDownloader:
             output_path = tf.name
 
         try:
-            with patch.object(
-                downloader, "download_and_decompress_segment"
-            ) as mock_download:
+            with patch.object(downloader, "download_and_decompress_segment") as mock_download:
                 mock_download.return_value = sample_tsv_data
 
                 result = await downloader.download_segments_to_file(
@@ -214,9 +203,7 @@ class TestAnalyticsDataDownloader:
                 Path(output_path).unlink()
 
     @pytest.mark.asyncio
-    async def test_download_segments_to_file_partial_failure(
-        self, downloader, sample_tsv_data
-    ):
+    async def test_download_segments_to_file_partial_failure(self, downloader, sample_tsv_data):
         """Test file download with some segments failing."""
         segments = [
             {"attributes": {"url": "https://s3.example.com/segment1.gz"}},
@@ -224,9 +211,7 @@ class TestAnalyticsDataDownloader:
             {"attributes": {"url": "https://s3.example.com/segment3.gz"}},
         ]
 
-        with patch.object(
-            downloader, "download_and_decompress_segment"
-        ) as mock_download:
+        with patch.object(downloader, "download_and_decompress_segment") as mock_download:
             # First succeeds, second fails, third succeeds
             mock_download.side_effect = [
                 sample_tsv_data,
@@ -253,9 +238,7 @@ class TestAnalyticsDataDownloader:
             {"attributes": {"url": "https://s3.example.com/segment2.gz"}},
         ]
 
-        with patch.object(
-            downloader, "download_and_decompress_segment"
-        ) as mock_download:
+        with patch.object(downloader, "download_and_decompress_segment") as mock_download:
             mock_download.side_effect = NetworkError("Connection failed")
 
             result = await downloader.download_segments_to_file(segments)

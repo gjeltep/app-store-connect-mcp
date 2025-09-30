@@ -1,27 +1,27 @@
 """XcodeCloud SCM API operations."""
 
-from typing import Optional, List, Dict, Any
+from typing import Any
 
-from app_store_connect_mcp.models import (
-    ScmProvidersResponse,
-    ScmRepositoriesResponse,
-    ScmPullRequestsResponse,
-    ScmGitReferencesResponse,
-)
-from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.core.protocols import APIClient
+from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.domains.xcode_cloud.constants import (
-    FIELDS_SCM_PROVIDERS,
-    FIELDS_SCM_REPOSITORIES,
-    FIELDS_SCM_PULL_REQUESTS,
     FIELDS_SCM_GIT_REFERENCES,
+    FIELDS_SCM_PROVIDERS,
+    FIELDS_SCM_PULL_REQUESTS,
+    FIELDS_SCM_REPOSITORIES,
+)
+from app_store_connect_mcp.models import (
+    ScmGitReferencesResponse,
+    ScmProvidersResponse,
+    ScmPullRequestsResponse,
+    ScmRepositoriesResponse,
 )
 
 
 async def list_scm_providers(
     api: APIClient,
     limit: int = 50,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """List SCM providers."""
     endpoint = "/v1/scmProviders"
 
@@ -38,8 +38,8 @@ async def list_repositories(
     api: APIClient,
     scm_provider_id: str,
     limit: int = 50,
-    include: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    include: list[str] | None = None,
+) -> dict[str, Any]:
     """List repositories for an SCM provider."""
     endpoint = f"/v1/scmProviders/{scm_provider_id}/repositories"
 
@@ -57,8 +57,8 @@ async def list_pull_requests(
     api: APIClient,
     repository_id: str,
     limit: int = 50,
-    include: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    include: list[str] | None = None,
+) -> dict[str, Any]:
     """List pull requests for a repository."""
     endpoint = f"/v1/scmRepositories/{repository_id}/pullRequests"
 
@@ -76,8 +76,8 @@ async def list_git_references(
     api: APIClient,
     repository_id: str,
     limit: int = 100,
-    include: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    include: list[str] | None = None,
+) -> dict[str, Any]:
     """List Git references (branches/tags) for a repository."""
     endpoint = f"/v1/scmRepositories/{repository_id}/gitReferences"
 

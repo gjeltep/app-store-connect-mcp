@@ -1,6 +1,5 @@
 """FastMCP-based server for App Store Connect MCP."""
 
-import os
 from contextlib import asynccontextmanager
 
 from mcp.server.fastmcp import FastMCP

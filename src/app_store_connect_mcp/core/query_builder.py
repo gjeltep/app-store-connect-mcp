@@ -1,10 +1,11 @@
 """Builder pattern for constructing API queries."""
 
-from typing import Dict, Any, List, Optional, Type, TypeVar
+from typing import Any, TypeVar
+
 from pydantic import BaseModel
 
-from app_store_connect_mcp.core.protocols import APIClient
 from app_store_connect_mcp.core.constants import APP_STORE_CONNECT_MAX_PAGE_SIZE
+from app_store_connect_mcp.core.protocols import APIClient
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -19,11 +20,9 @@ class APIQueryBuilder:
             endpoint: The API endpoint path
         """
         self.endpoint = endpoint
-        self.params: Dict[str, Any] = {}
+        self.params: dict[str, Any] = {}
 
-    def with_limit_and_sort(
-        self, limit: int, sort: Optional[str] = None
-    ) -> "APIQueryBuilder":
+    def with_limit_and_sort(self, limit: int, sort: str | None = None) -> "APIQueryBuilder":
         """Add limit and optional sort parameters for MCP pagination.
 
         This method is designed for MCP server usage where we want predictable
@@ -47,8 +46,8 @@ class APIQueryBuilder:
 
     def with_filters(
         self,
-        filters: Optional[Dict[str, Any]],
-        mapping: Optional[Dict[str, str]] = None,
+        filters: dict[str, Any] | None,
+        mapping: dict[str, str] | None = None,
     ) -> "APIQueryBuilder":
         """Add filter parameters with optional key mapping.
 
@@ -73,15 +72,13 @@ class APIQueryBuilder:
                     self.params[f"filter[{param_key}]"] = ",".join(value)
                 else:
                     # Handle non-string lists (e.g., integers)
-                    self.params[f"filter[{param_key}]"] = ",".join(
-                        str(v) for v in value
-                    )
+                    self.params[f"filter[{param_key}]"] = ",".join(str(v) for v in value)
             else:
                 self.params[f"filter[{param_key}]"] = value
 
         return self
 
-    def with_fields(self, resource_type: str, fields: List[str]) -> "APIQueryBuilder":
+    def with_fields(self, resource_type: str, fields: list[str]) -> "APIQueryBuilder":
         """Specify which fields to include in the response.
 
         Args:
@@ -95,7 +92,7 @@ class APIQueryBuilder:
             self.params[f"fields[{resource_type}]"] = ",".join(fields)
         return self
 
-    def with_includes(self, includes: Optional[List[str]]) -> "APIQueryBuilder":
+    def with_includes(self, includes: list[str] | None) -> "APIQueryBuilder":
         """Specify related resources to include.
 
         Args:
@@ -108,7 +105,7 @@ class APIQueryBuilder:
             self.params["include"] = ",".join(includes)
         return self
 
-    def with_raw_params(self, params: Dict[str, Any]) -> "APIQueryBuilder":
+    def with_raw_params(self, params: dict[str, Any]) -> "APIQueryBuilder":
         """Add raw parameters directly.
 
         Args:
@@ -121,8 +118,8 @@ class APIQueryBuilder:
         return self
 
     async def execute(
-        self, api: APIClient, response_model: Optional[Type[T]] = None
-    ) -> Dict[str, Any]:
+        self, api: APIClient, response_model: type[T] | None = None
+    ) -> dict[str, Any]:
         """Execute the query and optionally parse the response.
 
         Args:
