@@ -9,24 +9,68 @@ Talk to App Store Connect about your app. Modular tools, async I/O, and OpenAPI�
 - **Modular domains**: Clean separation of tool schemas and handlers; add new domains without touching the core; optimized LLM discovery/ usage
 - **MCP‑native**: Stdio transport, capability declarations, and tool wiring align with the official SDK [python‑sdk README](https://github.com/modelcontextprotocol/python-sdk?tab=readme-ov-file).
 
-### Quickstart
-1) Install Dependencies
+### Installation
+
+#### From PyPI (Production)
 
 ```bash
-uv pip install -e .
+pip install app-store-connect-mcp
 ```
 
-2) Configure Environment
+#### From Source (Development)
 
 ```bash
-cp .env.example .env
-# Fill in env variables per comments
+# Clone the repository
+git clone https://github.com/gjeltep/app-store-connect-mcp.git
+cd app-store-connect-mcp
+
+# Install with development dependencies
+uv pip install -e ".[dev]"
 ```
 
-3) Run (stdio)
+### Configuration
+
+Set the following environment variables:
 
 ```bash
+# Required
+export APP_STORE_KEY_ID="YOUR_KEY_ID"
+export APP_STORE_ISSUER_ID="YOUR_ISSUER_ID"
+export APP_STORE_PRIVATE_KEY_PATH="/path/to/AuthKey_XXXXX.p8"
+
+# Optional
+export APP_STORE_APP_ID="YOUR_APP_ID"
+export APP_STORE_KEY_TYPE="team"  # or "individual"
+```
+
+### Usage
+
+#### Production Mode (Recommended)
+
+Uses environment variables directly:
+
+```bash
+# Set environment variables first (see Configuration above)
 app-store-connect-mcp
+```
+
+#### Development Mode
+
+For development convenience, you can use a `.env` file:
+
+```bash
+# Copy and configure .env file
+cp .env.example .env
+# Edit .env with your credentials
+
+# Install with env support
+uv pip install -e ".[env]"
+
+# Run with --env-file flag
+app-store-connect-mcp-dev --env-file .env
+
+# Validate configuration without starting server
+app-store-connect-mcp-dev --env-file .env --validate-only
 ```
 
 Use with any MCP‑compatible client; the server announces tools and handles calls over stdio.

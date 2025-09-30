@@ -18,16 +18,25 @@ from app_store_connect_mcp.core.constants import (
 class AppStoreConnectAPI(BaseHTTPClient, APIClient):
     """Async App Store Connect API client."""
 
-    def __init__(self):
-        # Keys from dotenv
-        self.key_id = os.getenv("APP_STORE_KEY_ID")
-        self.issuer_id = os.getenv("APP_STORE_ISSUER_ID")
-        self.private_key_path = os.getenv("APP_STORE_PRIVATE_KEY_PATH")
-        self._default_app_id = os.getenv("APP_STORE_APP_ID")
-        # Key type and optional scope/subject for Individual keys
-        self.key_type = os.getenv("APP_STORE_KEY_TYPE", "team").lower()
-        self.scope = os.getenv("APP_STORE_SCOPE")  # comma-separated list
-        self.subject = os.getenv("APP_STORE_SUBJECT")  # optional for individual keys
+    def __init__(self, config: Optional[Dict[str, Optional[str]]] = None):
+        # Load from config dict if provided, otherwise from environment
+        if config:
+            self.key_id = config.get("APP_STORE_KEY_ID")
+            self.issuer_id = config.get("APP_STORE_ISSUER_ID")
+            self.private_key_path = config.get("APP_STORE_PRIVATE_KEY_PATH")
+            self._default_app_id = config.get("APP_STORE_APP_ID")
+            self.key_type = (config.get("APP_STORE_KEY_TYPE") or "team").lower()
+            self.scope = config.get("APP_STORE_SCOPE")
+            self.subject = config.get("APP_STORE_SUBJECT")
+        else:
+            # Read directly from environment (production mode)
+            self.key_id = os.getenv("APP_STORE_KEY_ID")
+            self.issuer_id = os.getenv("APP_STORE_ISSUER_ID")
+            self.private_key_path = os.getenv("APP_STORE_PRIVATE_KEY_PATH")
+            self._default_app_id = os.getenv("APP_STORE_APP_ID")
+            self.key_type = os.getenv("APP_STORE_KEY_TYPE", "team").lower()
+            self.scope = os.getenv("APP_STORE_SCOPE")
+            self.subject = os.getenv("APP_STORE_SUBJECT")
 
         # JWT Configuration
         self._private_key_cache: Optional[str] = None

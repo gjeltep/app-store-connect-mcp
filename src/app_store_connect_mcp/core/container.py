@@ -1,6 +1,6 @@
 """Dependency injection container for the MCP server."""
 
-from typing import List, Optional, TYPE_CHECKING
+from typing import Dict, List, Optional, TYPE_CHECKING
 from app_store_connect_mcp.core.protocols import APIClient, DomainHandler
 from app_store_connect_mcp.clients.app_store_connect import AppStoreConnectAPI
 from app_store_connect_mcp.domains.testflight import TestFlightHandler
@@ -15,14 +15,21 @@ if TYPE_CHECKING:
 class Container:
     """Dependency injection container."""
 
-    def __init__(self):
+    def __init__(self, config: Optional[Dict[str, Optional[str]]] = None):
+        """Initialize container.
+
+        Args:
+            config: Optional configuration dictionary. If provided, will be passed
+                   to the API client. Otherwise, API client reads from environment.
+        """
         self._api_client: Optional[APIClient] = None
         self._domain_handlers: Optional[List[DomainHandler]] = None
+        self._config = config
 
     def get_api_client(self) -> APIClient:
         """Get or create the API client singleton."""
         if self._api_client is None:
-            self._api_client = AppStoreConnectAPI()
+            self._api_client = AppStoreConnectAPI(config=self._config)
         return self._api_client
 
     def get_domain_handlers(self) -> List[DomainHandler]:

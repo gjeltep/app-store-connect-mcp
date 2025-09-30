@@ -3,15 +3,12 @@
 import os
 from contextlib import asynccontextmanager
 
-from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 
 from app_store_connect_mcp.core.container import Container
 
-# Load environment variables
-load_dotenv()
-
 # Create the container and MCP server
+# In production, this reads directly from environment variables
 container = Container()
 
 
