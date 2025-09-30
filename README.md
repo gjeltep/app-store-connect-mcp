@@ -1,5 +1,9 @@
 ## App Store Connect MCP Server
 
+[![Test](https://github.com/gjeltep/app-store-connect-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/gjeltep/app-store-connect-mcp/actions/workflows/test.yml)
+[![PyPI](https://img.shields.io/pypi/v/app-store-connect-mcp.svg)](https://pypi.org/project/app-store-connect-mcp/)
+[![Python Version](https://img.shields.io/pypi/pyversions/app-store-connect-mcp.svg)](https://pypi.org/project/app-store-connect-mcp/)
+
 Talk to App Store Connect about your app. Modular tools, async I/O, and OpenAPI‑driven typing so your agent stays accurate as Apple evolves.
 
 ### Why this is different
@@ -76,7 +80,7 @@ app-store-connect-mcp-dev --env-file .env --validate-only
 Use with any MCP‑compatible client; the server announces tools and handles calls over stdio.
 
 ### Generate/update API models
-- Models are generated from Apple’s official OpenAPI spec (fetched on demand).
+- Models are generated from Apple's official OpenAPI spec (fetched on demand).
 - Default source fetched from  [Apple](https://developer.apple.com/sample-code/app-store-connect/app-store-connect-openapi-specification.zip).
 - Override with `APP_STORE_CONNECT_OPENAPI_URL` to point to a local JSON spec.
 
@@ -86,6 +90,53 @@ Generate:
 uv pip install -e .[dev]
 python scripts/generate_models.py
 ```
+
+### Development
+
+#### Running Tests Locally
+
+```bash
+# Install development dependencies
+uv pip install -e ".[dev]"
+
+# Run all tests
+pytest tests/ -v
+
+# Run linting
+ruff check src/ tests/
+
+# Run formatting check
+ruff format --check src/ tests/
+
+# Auto-fix formatting
+ruff format src/ tests/
+
+# Validate configuration
+app-store-connect-mcp-dev --env-file .env --validate-only
+```
+
+#### Release Process
+
+**For Maintainers:**
+
+1. **Update version** in `pyproject.toml`
+2. **Commit changes**: `git commit -am "Release v0.x.x"`
+3. **Create and push tag**: `git tag v0.x.x && git push origin v0.x.x`
+4. **GitHub Actions** will automatically:
+   - Run all tests and security checks
+   - Build the package
+   - Publish to PyPI via OIDC (Trusted Publishing)
+   - Create a GitHub Release with auto-generated notes
+
+**PyPI Trusted Publishing Setup** (one-time):
+- Go to https://pypi.org/manage/account/publishing/
+- Add GitHub as trusted publisher:
+  - Owner: `gjeltep`
+  - Repository: `app-store-connect-mcp`
+  - Workflow: `release.yml`
+  - Environment: (leave empty)
+
+No API tokens needed - OIDC handles authentication automatically!
 
 ### Tools
 

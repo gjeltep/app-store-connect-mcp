@@ -1,0 +1,91 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  build-and-publish:
+    name: Build and Publish to PyPI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          echo "tag_version=$TAG_VERSION" >> $GITHUB_OUTPUT
+          echo "Tag version: $TAG_VERSION"
+
+      - name: Verify version in pyproject.toml matches tag
+        run: |
+          PYPROJECT_VERSION=$(grep '^version = ' pyproject.toml | cut -d'"' -f2)
+          TAG_VERSION=${{ steps.version.outputs.tag_version }}
+          echo "pyproject.toml version: $PYPROJECT_VERSION"
+          echo "Git tag version: $TAG_VERSION"
+          if [ "$PYPROJECT_VERSION" != "$TAG_VERSION" ]; then
+            echo "ERROR: Version mismatch!"
+            echo "pyproject.toml has version $PYPROJECT_VERSION but tag is v$TAG_VERSION"
+            exit 1
+          fi
+          echo "Version check passed: $PYPROJECT_VERSION"
+
+      - name: Build package
+        run: uv build
+
+      - name: Check build artifacts for sensitive files
+        run: |
+          echo "=== Checking sdist contents ==="
+          tar -tzf dist/*.tar.gz | tee /tmp/sdist-contents.txt
+          if grep -E "\.env$|\.p8$" /tmp/sdist-contents.txt; then
+            echo "ERROR: Found sensitive files in sdist!"
+            exit 1
+          fi
+
+          echo "=== Checking wheel contents ==="
+          unzip -l dist/*.whl | tee /tmp/wheel-contents.txt
+          if grep -E "\.env$|\.p8$" /tmp/wheel-contents.txt; then
+            echo "ERROR: Found sensitive files in wheel!"
+            exit 1
+          fi
+
+          echo "✓ Build artifacts are clean - no sensitive files found"
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          print-hash: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          body: |
+            ## Installation
+
+            ```bash
+            pip install app-store-connect-mcp==${{ steps.version.outputs.tag_version }}
+            ```
+
+            ## What's Changed
+            See auto-generated release notes below.
+
+            ## PyPI
+            https://pypi.org/project/app-store-connect-mcp/${{ steps.version.outputs.tag_version }}/

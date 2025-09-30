@@ -35,3 +35,28 @@ dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=1.1.0",
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = [
+    ".venv",
+    "build",
+    "dist",
+    "*.egg-info",
+    "src/app_store_connect_mcp/models/",
+]
+
+[tool.ruff.lint]
+select = [
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
