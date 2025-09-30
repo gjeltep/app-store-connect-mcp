@@ -7,16 +7,11 @@ on:
     branches: [main]
 
 jobs:
-  quality:
-    name: Code Quality & Security
+  lint:
+    name: Lint & Security
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
@@ -24,10 +19,10 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --frozen --group dev
 
       - name: Run ruff check
-        run: uv run ruff check src/ tests/
+        run: uv run ruff check --fix src/ tests/
 
       - name: Run ruff format check
         run: uv run ruff format --check src/ tests/
@@ -82,31 +77,13 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --frozen --group dev
 
       - name: Run tests
         run: uv run pytest tests/ -v --tb=short
 
-  config:
-    name: Configuration Validation
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          enable-cache: true
-
-      - name: Install dependencies with env support
-        run: uv sync --extra env
-
-      - name: Create test fixtures
+      - name: Test config validation
+        if: matrix.python-version == '3.12'
         run: |
           cat > .env.test << EOF
           APP_STORE_KEY_ID=test-key-id-123
@@ -115,20 +92,17 @@ jobs:
           APP_STORE_APP_ID=test-app-id
           APP_STORE_KEY_TYPE=team
           EOF
-          mkdir -p /tmp
+
           cat > /tmp/test.p8 << EOF
           -----BEGIN PRIVATE KEY-----
           test-key-content
           -----END PRIVATE KEY-----
           EOF
 
-      - name: Test config validation passes with valid config
-        run: app-store-connect-mcp-dev --env-file .env.test --validate-only
+          uv run --with python-dotenv app-store-connect-mcp-dev --env-file .env.test --validate-only
 
-      - name: Test config validation fails with missing config
-        run: |
-          if app-store-connect-mcp-dev --validate-only 2>/dev/null; then
-            echo "ERROR: Config validation should have failed with missing vars"
+          if uv run app-store-connect-mcp-dev --validate-only 2>/dev/null; then
+            echo "ERROR: Config validation should have failed"
             exit 1
           fi
-          echo "✓ Config validation correctly failed with missing vars"
+          echo "✓ Config validation works"
