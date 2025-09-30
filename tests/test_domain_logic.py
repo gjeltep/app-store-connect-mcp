@@ -1,10 +1,12 @@
 """Tests for domain business logic."""
 
+from unittest.mock import AsyncMock, Mock
+
 import pytest
-from unittest.mock import Mock, AsyncMock
-from app_store_connect_mcp.domains.testflight.handlers import TestFlightHandler
-from app_store_connect_mcp.domains.app.handlers import AppHandler
+
 from app_store_connect_mcp.core.errors import ValidationError
+from app_store_connect_mcp.domains.app.handlers import AppHandler
+from app_store_connect_mcp.domains.testflight.handlers import TestFlightHandler
 
 
 class TestTestFlightDomainLogic:

@@ -1,12 +1,12 @@
 """Analytics Report Requests API operations."""
 
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 from app_store_connect_mcp.core.protocols import APIClient
 from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.models import (
-    AnalyticsReportRequestsResponse,
     AnalyticsReportRequestResponse,
+    AnalyticsReportRequestsResponse,
 )
 
 # Field definitions
@@ -22,8 +22,8 @@ class AnalyticsRequestsAPI:
     async def get_report_request(
         self,
         request_id: str,
-        include: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        include: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Get detailed information about a specific analytics report request."""
         endpoint = f"/v1/analyticsReportRequests/{request_id}"
 
@@ -39,11 +39,11 @@ class AnalyticsRequestsAPI:
 
     async def list_report_requests_for_app(
         self,
-        app_id: Optional[str] = None,
-        access_type: Optional[List[str]] = None,
+        app_id: str | None = None,
+        access_type: list[str] | None = None,
         limit: int = 50,
-        include: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        include: list[str] | None = None,
+    ) -> dict[str, Any]:
         """List analytics report requests for an app."""
         app_id = self.api.ensure_app_id(app_id)
         endpoint = f"/v1/apps/{app_id}/analyticsReportRequests"
@@ -66,8 +66,8 @@ class AnalyticsRequestsAPI:
 
     async def create_report_request(
         self,
-        request_data: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        request_data: dict[str, Any],
+    ) -> dict[str, Any]:
         """Create a new analytics report request."""
         endpoint = "/v1/analyticsReportRequests"
 

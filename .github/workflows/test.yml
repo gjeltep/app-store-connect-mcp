@@ -1,0 +1,108 @@
+name: Test
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Lint & Security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen --extra dev
+
+      - name: Run ruff check
+        run: uv run ruff check --fix src/ tests/
+
+      - name: Run ruff format check
+        run: uv run ruff format --check src/ tests/
+
+      - name: Validate server.json
+        run: uv run --with jsonschema --with httpx python scripts/validate_server_json.py
+
+      - name: Check for sensitive files in repo
+        run: |
+          if find . -name ".env" -not -name ".env.example" | grep -q .; then
+            echo "ERROR: Found .env files in repository!"
+            exit 1
+          fi
+          if find . -name "*.p8" | grep -q .; then
+            echo "ERROR: Found .p8 private key files in repository!"
+            exit 1
+          fi
+          echo "✓ No sensitive files found"
+
+      - name: Build package
+        run: uv build
+
+      - name: Check build artifacts for sensitive files
+        run: |
+          if tar -tzf dist/*.tar.gz | grep -E "\.env$|\.p8$"; then
+            echo "ERROR: Found sensitive files in sdist!"
+            exit 1
+          fi
+          if unzip -l dist/*.whl | grep -E "\.env$|\.p8$"; then
+            echo "ERROR: Found sensitive files in wheel!"
+            exit 1
+          fi
+          echo "✓ Build artifacts are clean"
+
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen --extra dev
+
+      - name: Run tests
+        run: uv run pytest tests/ -v --tb=short
+
+      - name: Test config validation
+        if: matrix.python-version == '3.12'
+        run: |
+          cat > .env.test << EOF
+          APP_STORE_KEY_ID=test-key-id-123
+          APP_STORE_ISSUER_ID=test-issuer-id-456
+          APP_STORE_PRIVATE_KEY_PATH=/tmp/test.p8
+          APP_STORE_APP_ID=test-app-id
+          APP_STORE_KEY_TYPE=team
+          EOF
+
+          cat > /tmp/test.p8 << EOF
+          -----BEGIN PRIVATE KEY-----
+          test-key-content
+          -----END PRIVATE KEY-----
+          EOF
+
+          uv run --with python-dotenv app-store-connect-mcp-dev --env-file .env.test --validate-only
+
+          if uv run app-store-connect-mcp-dev --validate-only 2>/dev/null; then
+            echo "ERROR: Config validation should have failed"
+            exit 1
+          fi
+          echo "✓ Config validation works"

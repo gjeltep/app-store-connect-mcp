@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Optional, List, Dict, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from app_store_connect_mcp.core.base_handler import BaseHandler
 
 # Import API methods from sub-modules
-from . import api_products, api_builds, api_scm
+from . import api_builds, api_products, api_scm
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP
@@ -21,16 +21,16 @@ class XcodeCloudHandler(BaseHandler):
         """Get the category name for Xcode Cloud tools."""
         return "XcodeCloud"
 
-    def register_tools(self, mcp: "FastMCP") -> None:
+    def register_tools(self, mcp: FastMCP) -> None:
         """Register all Xcode Cloud domain tools with the FastMCP server."""
 
         # Product management tools
         @mcp.tool()
         async def products_list(
-            filters: Optional[Dict] = None,
+            filters: dict | None = None,
             limit: int = 50,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[XcodeCloud/Products] List all Xcode Cloud products."""
             return await api_products.list_products(
                 api=self.api, filters=filters, limit=limit, include=include
@@ -39,8 +39,8 @@ class XcodeCloudHandler(BaseHandler):
         @mcp.tool()
         async def products_get(
             product_id: str,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[XcodeCloud/Products] Get detailed information about a specific Xcode Cloud product."""
             return await api_products.get_product(
                 api=self.api, product_id=product_id, include=include
@@ -50,10 +50,10 @@ class XcodeCloudHandler(BaseHandler):
         @mcp.tool()
         async def workflows_list(
             product_id: str,
-            filters: Optional[Dict] = None,
+            filters: dict | None = None,
             limit: int = 50,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[XcodeCloud/Workflows] List workflows for an Xcode Cloud product. Note: Create/update/delete operations are not supported for safety."""
             return await api_products.list_workflows(
                 api=self.api,
@@ -66,8 +66,8 @@ class XcodeCloudHandler(BaseHandler):
         @mcp.tool()
         async def workflows_get(
             workflow_id: str,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[XcodeCloud/Workflows] Get detailed information about a specific workflow. Note: Create/update/delete operations are not supported for safety."""
             return await api_products.get_workflow(
                 api=self.api, workflow_id=workflow_id, include=include
@@ -76,13 +76,13 @@ class XcodeCloudHandler(BaseHandler):
         # Build management tools
         @mcp.tool()
         async def builds_list(
-            product_id: Optional[str] = None,
-            workflow_id: Optional[str] = None,
-            filters: Optional[Dict] = None,
+            product_id: str | None = None,
+            workflow_id: str | None = None,
+            filters: dict | None = None,
             sort: str = "-number",
             limit: int = 50,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[XcodeCloud/Builds] List builds for a product or workflow. Requires either product_id or workflow_id."""
             return await api_builds.list_builds(
                 api=self.api,
@@ -97,19 +97,17 @@ class XcodeCloudHandler(BaseHandler):
         @mcp.tool()
         async def builds_get(
             build_id: str,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[XcodeCloud/Builds] Get detailed information about a specific build."""
-            return await api_builds.get_build(
-                api=self.api, build_id=build_id, include=include
-            )
+            return await api_builds.get_build(api=self.api, build_id=build_id, include=include)
 
         @mcp.tool()
         async def builds_start(
             workflow_id: str,
-            source_branch_or_tag: Optional[str] = None,
-            pull_request_number: Optional[int] = None,
-        ) -> Dict[str, Any]:
+            source_branch_or_tag: str | None = None,
+            pull_request_number: int | None = None,
+        ) -> dict[str, Any]:
             """[XcodeCloud/Builds] Start a new build for a workflow."""
             return await api_builds.start_build(
                 api=self.api,
@@ -123,37 +121,31 @@ class XcodeCloudHandler(BaseHandler):
         async def artifacts_list(
             build_id: str,
             limit: int = 50,
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """[XcodeCloud/BuildArtifacts] List artifacts for a build."""
-            return await api_builds.list_artifacts(
-                api=self.api, build_id=build_id, limit=limit
-            )
+            return await api_builds.list_artifacts(api=self.api, build_id=build_id, limit=limit)
 
         @mcp.tool()
         async def issues_list(
             build_id: str,
             limit: int = 100,
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """[XcodeCloud/BuildArtifacts] List issues for a build."""
-            return await api_builds.list_issues(
-                api=self.api, build_id=build_id, limit=limit
-            )
+            return await api_builds.list_issues(api=self.api, build_id=build_id, limit=limit)
 
         @mcp.tool()
         async def test_results_list(
             build_id: str,
             limit: int = 100,
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """[XcodeCloud/BuildArtifacts] List test results for a build."""
-            return await api_builds.list_test_results(
-                api=self.api, build_id=build_id, limit=limit
-            )
+            return await api_builds.list_test_results(api=self.api, build_id=build_id, limit=limit)
 
         # SCM management tools
         @mcp.tool()
         async def scm_providers_list(
             limit: int = 50,
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """[XcodeCloud/SCM] List SCM providers configured for Xcode Cloud."""
             return await api_scm.list_scm_providers(api=self.api, limit=limit)
 
@@ -161,8 +153,8 @@ class XcodeCloudHandler(BaseHandler):
         async def repositories_list(
             scm_provider_id: str,
             limit: int = 50,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[XcodeCloud/SCM] List Git repositories for an SCM provider."""
             return await api_scm.list_repositories(
                 api=self.api,
@@ -175,8 +167,8 @@ class XcodeCloudHandler(BaseHandler):
         async def pull_requests_list(
             repository_id: str,
             limit: int = 50,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[XcodeCloud/SCM] List pull requests for a repository."""
             return await api_scm.list_pull_requests(
                 api=self.api,
@@ -189,8 +181,8 @@ class XcodeCloudHandler(BaseHandler):
         async def git_references_list(
             repository_id: str,
             limit: int = 100,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[XcodeCloud/SCM] List Git references (branches/tags) for a repository."""
             return await api_scm.list_git_references(
                 api=self.api,

@@ -1,11 +1,10 @@
 """Base handler for domain handlers with FastMCP integration."""
 
-from abc import ABC, abstractmethod
-from typing import Optional
+from abc import abstractmethod
 
 from mcp.server.fastmcp import FastMCP
+
 from app_store_connect_mcp.core.protocols import APIClient, DomainHandler
-from app_store_connect_mcp.core.errors import ValidationError
 
 
 class BaseHandler(DomainHandler):

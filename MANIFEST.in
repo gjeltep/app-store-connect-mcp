@@ -1,0 +1,4 @@
+# Explicitly exclude sensitive files from distribution
+exclude .env
+global-exclude *.env
+global-exclude *.p8

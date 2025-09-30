@@ -1,10 +1,9 @@
 """Utility parsers for version and datetime handling."""
 
-from typing import Optional, Tuple
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
-def parse_version(value: str) -> Tuple[int, int, int]:
+def parse_version(value: str) -> tuple[int, int, int]:
     """Parse version string into (major, minor, patch)."""
     parts = (value or "").split(".")
     major = int(parts[0]) if len(parts) > 0 and parts[0].isdigit() else 0
@@ -23,7 +22,7 @@ def version_le(a: str, b: str) -> bool:
     return parse_version(a) <= parse_version(b)
 
 
-def parse_datetime(value: Optional[str]) -> Optional[datetime]:
+def parse_datetime(value: str | None) -> datetime | None:
     """Parse ISO datetime string to datetime object."""
     if not value:
         return None
@@ -33,7 +32,7 @@ def parse_datetime(value: Optional[str]) -> Optional[datetime]:
     try:
         dt = datetime.fromisoformat(value)
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        return dt.astimezone(timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
+        return dt.astimezone(UTC)
     except Exception:
         return None

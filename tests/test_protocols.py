@@ -1,10 +1,10 @@
 """Tests for abstract protocol validation."""
 
 import pytest
+
 from app_store_connect_mcp.core.protocols import APIClient, DomainHandler
-from app_store_connect_mcp.clients.app_store_connect import AppStoreConnectAPI
-from app_store_connect_mcp.domains.testflight.handlers import TestFlightHandler
 from app_store_connect_mcp.domains.app.handlers import AppHandler
+from app_store_connect_mcp.domains.testflight.handlers import TestFlightHandler
 from tests.mocks import MockAPIClient, MockDomainHandler
 
 

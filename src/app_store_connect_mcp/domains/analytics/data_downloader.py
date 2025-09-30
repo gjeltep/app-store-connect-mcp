@@ -6,7 +6,8 @@ import os
 import tempfile
 from enum import Enum
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any
+
 import httpx
 
 from app_store_connect_mcp.core.errors import (
@@ -42,13 +43,13 @@ class AnalyticsDataDownloader:
     def _create_result_dict(
         self,
         status: DownloadStatus,
-        file_path: Optional[str] = None,
+        file_path: str | None = None,
         file_size_mb: float = 0,
         segment_count: int = 0,
         row_count: int = 0,
-        message: Optional[str] = None,
-        errors: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        message: str | None = None,
+        errors: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Create a standardized result dictionary for download operations.
 
         Args:
@@ -101,9 +102,7 @@ class AnalyticsDataDownloader:
         except httpx.NetworkError as e:
             raise NetworkError(
                 f"Failed to download analytics segment: {str(e)}",
-                details={
-                    "url": url[:URL_TRUNCATE_LENGTH] + "..."
-                },  # Truncate URL for security
+                details={"url": url[:URL_TRUNCATE_LENGTH] + "..."},  # Truncate URL for security
             )
         except httpx.HTTPStatusError as e:
             raise AppStoreConnectError(
@@ -111,9 +110,7 @@ class AnalyticsDataDownloader:
                 details={"status": e.response.status_code},
             )
         except Exception as e:
-            raise AppStoreConnectError(
-                f"Unexpected error downloading segment: {str(e)}"
-            )
+            raise AppStoreConnectError(f"Unexpected error downloading segment: {str(e)}")
 
     async def download_and_decompress_segment(self, url: str) -> str:
         """Download and decompress a gzipped segment.
@@ -137,13 +134,11 @@ class AnalyticsDataDownloader:
             try:
                 return raw_data.decode(FILE_ENCODING)
             except UnicodeDecodeError:
-                raise AppStoreConnectError(
-                    "Segment data is not valid text or gzipped text"
-                )
+                raise AppStoreConnectError("Segment data is not valid text or gzipped text")
 
     async def download_segments_to_file(
-        self, segments: List[Dict[str, Any]], output_path: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, segments: list[dict[str, Any]], output_path: str | None = None
+    ) -> dict[str, Any]:
         """Download all analytics report segments and save to a TSV file.
 
         This is the main method for downloading analytics data. It fetches all segments
@@ -186,9 +181,7 @@ class AnalyticsDataDownloader:
             file_path = Path(output_path)
         else:
             # Create temp file
-            fd, temp_path = tempfile.mkstemp(
-                suffix=TEMP_FILE_SUFFIX, prefix=TEMP_FILE_PREFIX
-            )
+            fd, temp_path = tempfile.mkstemp(suffix=TEMP_FILE_SUFFIX, prefix=TEMP_FILE_PREFIX)
             os.close(fd)  # Close the file descriptor
             file_path = Path(temp_path)
 
@@ -253,6 +246,4 @@ class AnalyticsDataDownloader:
             if file_path.exists():
                 file_path.unlink()
 
-            raise AppStoreConnectError(
-                f"Failed to save analytics data to file: {str(e)}"
-            )
+            raise AppStoreConnectError(f"Failed to save analytics data to file: {str(e)}")

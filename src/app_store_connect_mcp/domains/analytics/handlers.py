@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Optional, List, Dict, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from app_store_connect_mcp.core.base_handler import BaseHandler
 from app_store_connect_mcp.domains.analytics.api_reports import AnalyticsReportsAPI
@@ -32,11 +32,11 @@ class AnalyticsHandler(BaseHandler):
 
         @mcp.tool()
         async def analytics_report_requests_list(
-            app_id: Optional[str] = None,
-            access_type: Optional[List[str]] = None,
+            app_id: str | None = None,
+            access_type: list[str] | None = None,
             limit: int = 50,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[Analytics/Requests] List analytics report requests for an app.
 
             Default limit is 50 to prevent response size issues. Increase limit up to 200 for more results.
@@ -50,18 +50,16 @@ class AnalyticsHandler(BaseHandler):
 
         @mcp.tool()
         async def report_requests_create(
-            request_data: Dict[str, Any],
-        ) -> Dict[str, Any]:
+            request_data: dict[str, Any],
+        ) -> dict[str, Any]:
             """[Analytics/Requests] Create a new analytics report request."""
-            return await self.requests_api.create_report_request(
-                request_data=request_data
-            )
+            return await self.requests_api.create_report_request(request_data=request_data)
 
         @mcp.tool()
         async def report_requests_get(
             request_id: str,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[Analytics/Requests] Get detailed information about a specific analytics report request."""
             return await self.requests_api.get_report_request(
                 request_id=request_id, include=include
@@ -70,11 +68,11 @@ class AnalyticsHandler(BaseHandler):
         @mcp.tool()
         async def report_requests_list_reports(
             request_id: str,
-            name: Optional[List[str]] = None,
-            category: Optional[List[str]] = None,
+            name: list[str] | None = None,
+            category: list[str] | None = None,
             limit: int = 50,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[Analytics/Reports] List reports for a specific analytics report request.
 
             Default limit is 50 to prevent response size issues. Increase limit up to 200 for more results.
@@ -90,21 +88,19 @@ class AnalyticsHandler(BaseHandler):
         @mcp.tool()
         async def reports_get(
             report_id: str,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[Analytics/Reports] Get detailed information about a specific analytics report."""
-            return await self.reports_api.get_report(
-                report_id=report_id, include=include
-            )
+            return await self.reports_api.get_report(report_id=report_id, include=include)
 
         @mcp.tool()
         async def reports_list_instances(
             report_id: str,
-            granularity: Optional[List[str]] = None,
-            processing_date: Optional[List[str]] = None,
+            granularity: list[str] | None = None,
+            processing_date: list[str] | None = None,
             limit: int = 100,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[Analytics/Reports] List instances for a specific analytics report.
 
             Default limit is 100 (lightweight data). Max 200. Use pagination metadata for additional pages.
@@ -120,8 +116,8 @@ class AnalyticsHandler(BaseHandler):
         @mcp.tool()
         async def report_instances_get(
             instance_id: str,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[Analytics/Reports] Get detailed information about a specific analytics report instance."""
             return await self.reports_api.get_report_instance(
                 instance_id=instance_id, include=include
@@ -131,8 +127,8 @@ class AnalyticsHandler(BaseHandler):
         async def report_instances_list_segments(
             instance_id: str,
             limit: int = 100,  # Lightweight - mostly IDs
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[Analytics/Segments] List segments for a specific analytics report instance.
 
             Default limit is 100 (lightweight data). Max 200. Use pagination metadata for additional pages.
@@ -144,18 +140,16 @@ class AnalyticsHandler(BaseHandler):
         @mcp.tool()
         async def report_segments_get(
             segment_id: str,
-            include: Optional[List[str]] = None,
-        ) -> Dict[str, Any]:
+            include: list[str] | None = None,
+        ) -> dict[str, Any]:
             """[Analytics/Segments] Get detailed information about a specific analytics report segment."""
-            return await self.segments_api.get_segment(
-                segment_id=segment_id, include=include
-            )
+            return await self.segments_api.get_segment(segment_id=segment_id, include=include)
 
         @mcp.tool()
         async def report_instances_download_data(
             instance_id: str,
-            output_path: Optional[str] = None,
-        ) -> Dict[str, Any]:
+            output_path: str | None = None,
+        ) -> dict[str, Any]:
             """[Analytics/Data] Download analytics report data to a TSV file.
 
             This tool fetches all segments for a report instance and saves the data to a TSV file.

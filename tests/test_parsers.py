@@ -1,12 +1,12 @@
 """Tests for concrete parser implementations."""
 
-import pytest
-from datetime import datetime, timezone
+from datetime import UTC
+
 from app_store_connect_mcp.utils.parsers import (
+    parse_datetime,
     parse_version,
     version_ge,
     version_le,
-    parse_datetime,
 )
 
 
@@ -48,17 +48,17 @@ class TestDateTimeParser:
         assert dt is not None
         assert dt.year == 2024
         assert dt.hour == 10
-        assert dt.tzinfo == timezone.utc
+        assert dt.tzinfo == UTC
 
         # Z suffix (also UTC)
         dt = parse_datetime("2024-01-15T10:30:00Z")
         assert dt is not None
-        assert dt.tzinfo == timezone.utc
+        assert dt.tzinfo == UTC
 
         # No timezone (assumes UTC)
         dt = parse_datetime("2024-01-15T10:30:00")
         assert dt is not None
-        assert dt.tzinfo == timezone.utc
+        assert dt.tzinfo == UTC
 
     def test_parse_datetime_invalid(self):
         """Test parsing invalid datetimes."""
@@ -70,4 +70,4 @@ class TestDateTimeParser:
         dt = parse_datetime("2024-01-15T10:30:00-05:00")
         assert dt is not None
         assert dt.hour == 15  # 10:30 EST = 15:30 UTC
-        assert dt.tzinfo == timezone.utc
+        assert dt.tzinfo == UTC

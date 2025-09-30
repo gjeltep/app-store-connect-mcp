@@ -1,6 +1,8 @@
 ## App Store Connect MCP Server
 
-Talk to App Store Connect about your app. Modular tools, async I/O, and OpenAPI‑driven typing so your agent stays accurate as Apple evolves.
+<!-- mcp-name: io.github.gjeltep/app-store-connect-mcp -->
+
+Talk to App Store Connect about your app. Modular tools, async I/O, and OpenAPI‑driven typing keep your agent accurate as Apple evolves.
 
 ### Why this is different
 - **Spec‑aware**: Fields and enums are derived from Apple’s OpenAPI spec at runtime, reducing drift and surprise breakage.
@@ -9,39 +11,68 @@ Talk to App Store Connect about your app. Modular tools, async I/O, and OpenAPI�
 - **Modular domains**: Clean separation of tool schemas and handlers; add new domains without touching the core; optimized LLM discovery/ usage
 - **MCP‑native**: Stdio transport, capability declarations, and tool wiring align with the official SDK [python‑sdk README](https://github.com/modelcontextprotocol/python-sdk?tab=readme-ov-file).
 
-### Quickstart
-1) Install Dependencies
+### Quick start
+
+Install from source:
 
 ```bash
-uv pip install -e .
+git clone https://github.com/gjeltep/app-store-connect-mcp.git
+cd app-store-connect-mcp
+uv pip install -e ".[dev]"
 ```
 
-2) Configure Environment
+### Configuration
+
+Set these environment variables:
 
 ```bash
-cp .env.example .env
-# Fill in env variables per comments
+# Required
+export APP_STORE_KEY_ID="YOUR_KEY_ID"
+export APP_STORE_ISSUER_ID="YOUR_ISSUER_ID"
+export APP_STORE_PRIVATE_KEY_PATH="/path/to/AuthKey_XXXXX.p8"
+
+# Optional
+export APP_STORE_APP_ID="YOUR_APP_ID"
+export APP_STORE_KEY_TYPE="team"  # or "individual"
 ```
 
-3) Run (stdio)
+### Usage
+
+Run with your environment variables set (recommended):
 
 ```bash
 app-store-connect-mcp
 ```
 
+Or use a `.env` file during development:
+
+```bash
+# Copy and configure .env file
+cp .env.example .env
+# Edit .env with your credentials
+
+# Run with --env-file flag
+app-store-connect-mcp-dev --env-file .env
+
+# Validate configuration without starting server
+app-store-connect-mcp-dev --env-file .env --validate-only
+```
+
 Use with any MCP‑compatible client; the server announces tools and handles calls over stdio.
 
-### Generate/update API models
-- Models are generated from Apple’s official OpenAPI spec (fetched on demand).
-- Default source fetched from  [Apple](https://developer.apple.com/sample-code/app-store-connect/app-store-connect-openapi-specification.zip).
-- Override with `APP_STORE_CONNECT_OPENAPI_URL` to point to a local JSON spec.
-
-Generate:
+### Generate or update API models
+Models are generated from Apple's official OpenAPI spec. You can override the source with `APP_STORE_CONNECT_OPENAPI_URL`.
 
 ```bash
 uv pip install -e .[dev]
 python scripts/generate_models.py
 ```
+
+### Development
+
+See `CONTRIBUTING.md` for test, lint, formatting, and local tooling guidance.
+
+<!-- Publishing and registry details will be added once they are live. -->
 
 ### Tools
 
@@ -158,3 +189,7 @@ graph TD
 ### Credits
 Built on the official Model Context Protocol Python SDK — see the docs and examples in the
 [python‑sdk README](https://github.com/modelcontextprotocol/python-sdk?tab=readme-ov-file).
+
+—
+
+See `CONTRIBUTING.md` if you’d like to help.

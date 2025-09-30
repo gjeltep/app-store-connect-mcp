@@ -1,14 +1,15 @@
 """Reusable filter engine for post-processing API responses."""
 
-from typing import List, Dict, Any, Optional
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
 from app_store_connect_mcp.utils.parsers import parse_datetime, version_ge, version_le
 
 
 class FilterEngine:
     """Engine for applying filters to collections of data."""
 
-    def __init__(self, data: List[Dict[str, Any]]):
+    def __init__(self, data: list[dict[str, Any]]):
         """Initialize the filter engine with data.
 
         Args:
@@ -16,7 +17,7 @@ class FilterEngine:
         """
         self.data = data
 
-    def apply(self) -> List[Dict[str, Any]]:
+    def apply(self) -> list[dict[str, Any]]:
         """Return the filtered data.
 
         Returns:
@@ -27,9 +28,9 @@ class FilterEngine:
     def filter_by_date_range(
         self,
         field_path: str,
-        after: Optional[str] = None,
-        before: Optional[str] = None,
-        since_days: Optional[int] = None,
+        after: str | None = None,
+        before: str | None = None,
+        since_days: int | None = None,
     ) -> "FilterEngine":
         """Filter items by date range.
 
@@ -46,9 +47,9 @@ class FilterEngine:
             return self
 
         # Calculate date boundaries
-        now_utc = datetime.now(timezone.utc)
-        min_dt: Optional[datetime] = None
-        max_dt: Optional[datetime] = None
+        now_utc = datetime.now(UTC)
+        min_dt: datetime | None = None
+        max_dt: datetime | None = None
 
         if since_days and since_days > 0:
             min_dt = now_utc - timedelta(days=since_days)
@@ -61,7 +62,7 @@ class FilterEngine:
         if before:
             max_dt = parse_datetime(before)
 
-        def matches(item: Dict[str, Any]) -> bool:
+        def matches(item: dict[str, Any]) -> bool:
             value = self._get_nested_value(item, field_path)
             if not value:
                 return False
@@ -83,7 +84,7 @@ class FilterEngine:
     def filter_by_text_contains(
         self,
         field_path: str,
-        search_terms: Optional[List[str]],
+        search_terms: list[str] | None,
         case_sensitive: bool = False,
     ) -> "FilterEngine":
         """Filter items where field contains any of the search terms.
@@ -99,7 +100,7 @@ class FilterEngine:
         if not search_terms:
             return self
 
-        def matches(item: Dict[str, Any]) -> bool:
+        def matches(item: dict[str, Any]) -> bool:
             value = self._get_nested_value(item, field_path)
             if not value:
                 return False
@@ -119,8 +120,8 @@ class FilterEngine:
     def filter_by_numeric_range(
         self,
         field_path: str,
-        min_value: Optional[float] = None,
-        max_value: Optional[float] = None,
+        min_value: float | None = None,
+        max_value: float | None = None,
     ) -> "FilterEngine":
         """Filter items by numeric range.
 
@@ -135,7 +136,7 @@ class FilterEngine:
         if min_value is None and max_value is None:
             return self
 
-        def matches(item: Dict[str, Any]) -> bool:
+        def matches(item: dict[str, Any]) -> bool:
             value = self._get_nested_value(item, field_path)
             if value is None:
                 return False
@@ -158,8 +159,8 @@ class FilterEngine:
     def filter_by_version_range(
         self,
         field_path: str,
-        min_version: Optional[str] = None,
-        max_version: Optional[str] = None,
+        min_version: str | None = None,
+        max_version: str | None = None,
     ) -> "FilterEngine":
         """Filter items by version string range.
 
@@ -174,7 +175,7 @@ class FilterEngine:
         if not min_version and not max_version:
             return self
 
-        def matches(item: Dict[str, Any]) -> bool:
+        def matches(item: dict[str, Any]) -> bool:
             value = self._get_nested_value(item, field_path)
             if not value:
                 return False
@@ -191,9 +192,7 @@ class FilterEngine:
         self.data = [item for item in self.data if matches(item)]
         return self
 
-    def filter_by_values(
-        self, field_path: str, allowed_values: Optional[List[Any]]
-    ) -> "FilterEngine":
+    def filter_by_values(self, field_path: str, allowed_values: list[Any] | None) -> "FilterEngine":
         """Filter items where field matches any of the allowed values.
 
         Args:
@@ -206,7 +205,7 @@ class FilterEngine:
         if not allowed_values:
             return self
 
-        def matches(item: Dict[str, Any]) -> bool:
+        def matches(item: dict[str, Any]) -> bool:
             value = self._get_nested_value(item, field_path)
             return value in allowed_values
 
@@ -227,7 +226,7 @@ class FilterEngine:
         return self
 
     @staticmethod
-    def _get_nested_value(data: Dict[str, Any], path: str) -> Any:
+    def _get_nested_value(data: dict[str, Any], path: str) -> Any:
         """Get a value from a nested dictionary using dot notation.
 
         Args:

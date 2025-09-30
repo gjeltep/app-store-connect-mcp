@@ -13,7 +13,6 @@ dist/
 wheels/
 *.egg-info
 app_store_connect_api_openapi.json
-src/app_store_connect_mcp/models/
 
 # Virtual environments
 .venv

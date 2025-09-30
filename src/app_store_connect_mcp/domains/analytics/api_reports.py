@@ -1,14 +1,14 @@
 """Analytics Reports API operations."""
 
-from typing import Optional, List, Dict, Any
+from typing import Any
 
 from app_store_connect_mcp.core.protocols import APIClient
 from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.models import (
-    AnalyticsReportsResponse,
-    AnalyticsReportResponse,
-    AnalyticsReportInstancesResponse,
     AnalyticsReportInstanceResponse,
+    AnalyticsReportInstancesResponse,
+    AnalyticsReportResponse,
+    AnalyticsReportsResponse,
 )
 
 # Field definitions
@@ -33,11 +33,11 @@ class AnalyticsReportsAPI:
     async def list_reports_for_request(
         self,
         request_id: str,
-        name: Optional[List[str]] = None,
-        category: Optional[List[str]] = None,
+        name: list[str] | None = None,
+        category: list[str] | None = None,
         limit: int = 50,
-        include: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        include: list[str] | None = None,
+    ) -> dict[str, Any]:
         """List reports for a specific analytics report request."""
         endpoint = f"/v1/analyticsReportRequests/{request_id}/reports"
 
@@ -62,8 +62,8 @@ class AnalyticsReportsAPI:
     async def get_report(
         self,
         report_id: str,
-        include: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        include: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Get detailed information about a specific analytics report."""
         endpoint = f"/v1/analyticsReports/{report_id}"
 
@@ -80,11 +80,11 @@ class AnalyticsReportsAPI:
     async def list_report_instances(
         self,
         report_id: str,
-        granularity: Optional[List[str]] = None,
-        processing_date: Optional[List[str]] = None,
+        granularity: list[str] | None = None,
+        processing_date: list[str] | None = None,
         limit: int = 100,
-        include: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        include: list[str] | None = None,
+    ) -> dict[str, Any]:
         """List instances for a specific analytics report."""
         endpoint = f"/v1/analyticsReports/{report_id}/instances"
 
@@ -109,8 +109,8 @@ class AnalyticsReportsAPI:
     async def get_report_instance(
         self,
         instance_id: str,
-        include: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+        include: list[str] | None = None,
+    ) -> dict[str, Any]:
         """Get detailed information about a specific analytics report instance."""
         endpoint = f"/v1/analyticsReportInstances/{instance_id}"
 

@@ -1,29 +1,29 @@
 """XcodeCloud API methods for Xcode Cloud products and workflows."""
 
-from typing import Optional, List, Dict, Any
+from typing import Any
 
-from app_store_connect_mcp.models import (
-    CiProductsResponse,
-    CiProductResponse,
-    CiWorkflowsResponse,
-    CiWorkflowResponse,
-)
-from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.core.protocols import APIClient
+from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.domains.xcode_cloud.constants import (
     FIELDS_CI_PRODUCTS,
     FIELDS_CI_WORKFLOWS,
     PRODUCT_FILTER_MAPPING,
     WORKFLOW_FILTER_MAPPING,
 )
+from app_store_connect_mcp.models import (
+    CiProductResponse,
+    CiProductsResponse,
+    CiWorkflowResponse,
+    CiWorkflowsResponse,
+)
 
 
 async def list_products(
     api: APIClient,
-    filters: Optional[Dict] = None,
+    filters: dict | None = None,
     limit: int = 50,
-    include: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    include: list[str] | None = None,
+) -> dict[str, Any]:
     """List all Xcode Cloud products."""
     endpoint = "/v1/ciProducts"
 
@@ -41,8 +41,8 @@ async def list_products(
 async def get_product(
     api: APIClient,
     product_id: str,
-    include: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    include: list[str] | None = None,
+) -> dict[str, Any]:
     """Get detailed information about a specific Xcode Cloud product."""
     endpoint = f"/v1/ciProducts/{product_id}"
 
@@ -58,10 +58,10 @@ async def get_product(
 async def list_workflows(
     api: APIClient,
     product_id: str,
-    filters: Optional[Dict] = None,
+    filters: dict | None = None,
     limit: int = 50,
-    include: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    include: list[str] | None = None,
+) -> dict[str, Any]:
     """List workflows for a product.
 
     Note: This is a read-only operation. Create, update, and delete operations
@@ -84,8 +84,8 @@ async def list_workflows(
 async def get_workflow(
     api: APIClient,
     workflow_id: str,
-    include: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    include: list[str] | None = None,
+) -> dict[str, Any]:
     """Get detailed information about a specific workflow.
 
     Note: This is a read-only operation. Create, update, and delete operations

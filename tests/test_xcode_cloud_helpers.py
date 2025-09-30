@@ -1,12 +1,14 @@
 """Tests for Xcode Cloud helper functions and query construction patterns."""
 
-import pytest
 from unittest.mock import AsyncMock
-from app_store_connect_mcp.domains.xcode_cloud.api_builds import (
-    list_builds,
-    _fetch_action_resources,
-)
+
+import pytest
+
 from app_store_connect_mcp.core.errors import ValidationError
+from app_store_connect_mcp.domains.xcode_cloud.api_builds import (
+    _fetch_action_resources,
+    list_builds,
+)
 
 
 class TestXcodeCloudQueryConstruction:
@@ -16,9 +18,7 @@ class TestXcodeCloudQueryConstruction:
     async def test_list_builds_with_workflow_id(self):
         """Test that list_builds constructs correct query for workflow."""
         mock_api = AsyncMock()
-        mock_api.get = AsyncMock(
-            return_value={"data": [], "meta": {"paging": {"total": 0}}}
-        )
+        mock_api.get = AsyncMock(return_value={"data": [], "meta": {"paging": {"total": 0}}})
 
         await list_builds(api=mock_api, workflow_id="test-workflow-123", limit=10)
 
@@ -42,29 +42,21 @@ class TestXcodeCloudQueryConstruction:
         with pytest.raises(ValidationError) as exc_info:
             await list_builds(api=mock_api)
 
-        assert "either product_id or workflow_id must be provided" in str(
-            exc_info.value
-        )
+        assert "either product_id or workflow_id must be provided" in str(exc_info.value)
         assert exc_info.value.category.value == "validation"
 
     @pytest.mark.asyncio
     async def test_list_builds_single_query_construction(self):
         """Test that query building logic is not duplicated between workflow and product paths."""
         mock_api = AsyncMock()
-        mock_api.get = AsyncMock(
-            return_value={"data": [], "meta": {"paging": {"total": 0}}}
-        )
+        mock_api.get = AsyncMock(return_value={"data": [], "meta": {"paging": {"total": 0}}})
 
         # Test with workflow
-        await list_builds(
-            api=mock_api, workflow_id="w1", filters={"is_pull_request_build": True}
-        )
+        await list_builds(api=mock_api, workflow_id="w1", filters={"is_pull_request_build": True})
         call1_params = mock_api.get.call_args[1]["params"]
 
         # Test with product
-        await list_builds(
-            api=mock_api, product_id="p1", filters={"is_pull_request_build": True}
-        )
+        await list_builds(api=mock_api, product_id="p1", filters={"is_pull_request_build": True})
         call2_params = mock_api.get.call_args[1]["params"]
 
         # Both should have identical query parameters
@@ -193,9 +185,7 @@ class TestFetchActionResources:
     async def test_fetch_action_resources_handles_empty_actions(self):
         """Test resource fetching handles builds with no actions gracefully."""
         mock_api = AsyncMock()
-        mock_api.get = AsyncMock(
-            return_value={"data": [], "meta": {"paging": {"total": 0}}}
-        )
+        mock_api.get = AsyncMock(return_value={"data": [], "meta": {"paging": {"total": 0}}})
 
         result = await _fetch_action_resources(
             api=mock_api,
