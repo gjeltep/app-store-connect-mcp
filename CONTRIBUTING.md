@@ -57,29 +57,20 @@ python scripts/generate_models.py
 
 #### For Maintainers
 
-1. **Update version** across all files:
-   ```bash
-   python scripts/update_version.py 0.x.x
-   ```
-
-2. **Review changes**:
-   ```bash
-   git diff
-   ```
-
-3. **Commit and tag**:
+1. **Commit and tag**:
    ```bash
    git commit -am "Release v0.x.x"
    git tag v0.x.x
    ```
 
-4. **Push to GitHub**:
+2. **Push to GitHub**:
    ```bash
    git push origin main
    git push origin v0.x.x
    ```
 
-GitHub Actions will automatically build and publish to PyPI when a version tag is pushed.
+3. **CI** -
+GitHub Actions will automatically build and publish to PyPI and MCP registry when a version tag is pushed.
 
 ### Notes
 
