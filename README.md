@@ -2,7 +2,12 @@
 
 <!-- mcp-name: io.github.gjeltep/app-store-connect-mcp -->
 
-Talk to App Store Connect about your app. Modular tools, async I/O, and OpenAPI‑driven typing keep your agent accurate as Apple evolves.
+[![Test](https://github.com/gjeltep/app-store-connect-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/gjeltep/app-store-connect-mcp/actions/workflows/test.yml)
+[![PyPI](https://img.shields.io/pypi/v/app-store-connect-mcp.svg)](https://pypi.org/project/app-store-connect-mcp/)
+[![Python Version](https://img.shields.io/pypi/pyversions/app-store-connect-mcp.svg)](https://pypi.org/project/app-store-connect-mcp/)
+[![MCP Registry](https://img.shields.io/badge/MCP-Registry-blue)](https://registry.modelcontextprotocol.io)
+
+Talk to App Store Connect about your app. Modular tools, async I/O, and OpenAPI‑driven typing so your agent stays accurate as Apple evolves.
 
 ### Why this is different
 - **Spec‑aware**: Fields and enums are derived from Apple’s OpenAPI spec at runtime, reducing drift and surprise breakage.
@@ -11,9 +16,15 @@ Talk to App Store Connect about your app. Modular tools, async I/O, and OpenAPI�
 - **Modular domains**: Clean separation of tool schemas and handlers; add new domains without touching the core; optimized LLM discovery/ usage
 - **MCP‑native**: Stdio transport, capability declarations, and tool wiring align with the official SDK [python‑sdk README](https://github.com/modelcontextprotocol/python-sdk?tab=readme-ov-file).
 
-### Quick start
+### Installation
 
-Install from source:
+#### From PyPI
+
+```bash
+pip install app-store-connect-mcp
+```
+
+#### From Source
 
 ```bash
 git clone https://github.com/gjeltep/app-store-connect-mcp.git
@@ -61,7 +72,9 @@ app-store-connect-mcp-dev --env-file .env --validate-only
 Use with any MCP‑compatible client; the server announces tools and handles calls over stdio.
 
 ### Generate or update API models
-Models are generated from Apple's official OpenAPI spec. You can override the source with `APP_STORE_CONNECT_OPENAPI_URL`.
+
+Models are generated from Apple's official OpenAPI spec (fetched automatically from [Apple's developer site](https://developer.apple.com/sample-code/app-store-connect/app-store-connect-openapi-specification.zip)).
+You can override the source with `APP_STORE_CONNECT_OPENAPI_URL` to point to a local JSON file.
 
 ```bash
 uv pip install -e .[dev]
@@ -70,9 +83,7 @@ python scripts/generate_models.py
 
 ### Development
 
-See `CONTRIBUTING.md` for test, lint, formatting, and local tooling guidance.
-
-<!-- Publishing and registry details will be added once they are live. -->
+For development setup, testing, and contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Tools
 
@@ -187,9 +198,10 @@ graph TD
 ```
 
 ### Credits
+
 Built on the official Model Context Protocol Python SDK — see the docs and examples in the
 [python‑sdk README](https://github.com/modelcontextprotocol/python-sdk?tab=readme-ov-file).
 
-—
+---
 
-See `CONTRIBUTING.md` if you’d like to help.
+See [CONTRIBUTING.md](CONTRIBUTING.md) if you'd like to help.
