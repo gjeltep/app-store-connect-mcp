@@ -24,6 +24,11 @@ class MockAPIClient(APIClient):
         self.requests.append(("POST", endpoint, data))
         return self.responses.get(endpoint, {"status": "created"})
 
+    async def patch(self, endpoint: str, data: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Mock PATCH request."""
+        self.requests.append(("PATCH", endpoint, data))
+        return self.responses.get(endpoint, {"status": "updated"})
+
     async def delete(self, endpoint: str) -> None:
         """Mock DELETE request."""
         self.requests.append(("DELETE", endpoint, None))

@@ -7,6 +7,7 @@ from app_store_connect_mcp.core.protocols import APIClient, DomainHandler
 from app_store_connect_mcp.domains.analytics import AnalyticsHandler
 from app_store_connect_mcp.domains.app import AppHandler
 from app_store_connect_mcp.domains.testflight import TestFlightHandler
+from app_store_connect_mcp.domains.users import UsersHandler
 from app_store_connect_mcp.domains.xcode_cloud import XcodeCloudHandler
 
 if TYPE_CHECKING:
@@ -41,6 +42,7 @@ class Container:
                 AnalyticsHandler(api),
                 AppHandler(api),
                 TestFlightHandler(api),
+                UsersHandler(api),
                 XcodeCloudHandler(api),
             ]
         return self._domain_handlers
