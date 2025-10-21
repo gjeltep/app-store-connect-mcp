@@ -10,9 +10,11 @@ permissions:
   id-token: write
 
 jobs:
-  build-and-publish:
-    name: Build and Publish
+  build-and-validate:
+    name: Build and Validate
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.tag_version }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -84,10 +86,69 @@ jobs:
 
           echo "✓ Build artifacts are clean - no sensitive files found"
 
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: build-and-validate
+    runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.publish_status.outputs.published }}
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Check if version exists on PyPI
+        id: pypi_check
+        run: |
+          VERSION="${{ needs.build-and-validate.outputs.version }}"
+          if curl -sSf "https://pypi.org/pypi/app-store-connect-mcp/$VERSION/json" > /dev/null 2>&1; then
+            echo "Version $VERSION already exists on PyPI"
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version $VERSION does not exist on PyPI"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Publish to PyPI
+        if: steps.pypi_check.outputs.exists == 'false'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           print-hash: true
+
+      - name: Skip PyPI publish
+        if: steps.pypi_check.outputs.exists == 'true'
+        run: |
+          echo "⏭️  Skipping PyPI publish - version ${{ needs.build-and-validate.outputs.version }} already exists"
+
+      - name: Set publish status
+        id: publish_status
+        if: always()
+        run: |
+          # Mark as published if either we just published OR it already existed
+          if [[ "${{ steps.pypi_check.outputs.exists }}" == "true" ]] || [[ "${{ steps.pypi_check.outputs.exists }}" == "false" && "${{ job.status }}" == "success" ]]; then
+            echo "published=true" >> $GITHUB_OUTPUT
+            echo "✅ PyPI package is available"
+          else
+            echo "published=false" >> $GITHUB_OUTPUT
+            echo "❌ PyPI package is NOT available"
+          fi
+
+  publish-mcp:
+    name: Publish to MCP Registry
+    needs: [build-and-validate, publish-pypi]
+    runs-on: ubuntu-latest
+    if: needs.publish-pypi.outputs.published == 'true'
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Install MCP Publisher
         run: |
@@ -103,6 +164,17 @@ jobs:
       - name: Publish to MCP Registry
         run: ./mcp-publisher publish
 
+  create-release:
+    name: Create GitHub Release
+    needs: [build-and-validate, publish-pypi, publish-mcp]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -112,12 +184,12 @@ jobs:
             ## Installation
 
             ```bash
-            pip install app-store-connect-mcp==${{ steps.version.outputs.tag_version }}
+            pip install app-store-connect-mcp==${{ needs.build-and-validate.outputs.version }}
             ```
 
             ## What's Changed
             See auto-generated release notes below.
 
             ## Links
-            - **PyPI**: https://pypi.org/project/app-store-connect-mcp/${{ steps.version.outputs.tag_version }}/
+            - **PyPI**: https://pypi.org/project/app-store-connect-mcp/${{ needs.build-and-validate.outputs.version }}/
             - **MCP Registry**: https://registry.modelcontextprotocol.io
