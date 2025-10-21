@@ -22,7 +22,12 @@ class APIClient(ABC):
         pass
 
     @abstractmethod
-    async def patch(self, endpoint: str, data: dict[str, Any] | None = None, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def patch(
+        self,
+        endpoint: str,
+        data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Execute PATCH request."""
         pass
 

@@ -198,7 +198,12 @@ class AppStoreConnectAPI(BaseHTTPClient, APIClient):
             )
         return app_id
 
-    async def patch(self, endpoint: str, data: dict[str, Any] | None = None, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def patch(
+        self,
+        endpoint: str,
+        data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Execute PATCH request."""
         return await self._execute_request("PATCH", endpoint, json=data, params=params)
 

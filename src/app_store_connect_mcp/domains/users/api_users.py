@@ -65,11 +65,7 @@ class UsersAPI:
         endpoint = f"/v1/users/{user_id}"
 
         # Build query
-        query = (
-            APIQueryBuilder(endpoint)
-            .with_fields("users", FIELDS_USERS)
-            .with_includes(include)
-        )
+        query = APIQueryBuilder(endpoint).with_fields("users", FIELDS_USERS).with_includes(include)
 
         # Execute and return
         return await query.execute(self.api, UserResponse)
@@ -84,11 +80,7 @@ class UsersAPI:
         endpoint = f"/v1/users/{user_id}"
 
         # Build query for includes
-        query = (
-            APIQueryBuilder(endpoint)
-            .with_fields("users", FIELDS_USERS)
-            .with_includes(include)
-        )
+        query = APIQueryBuilder(endpoint).with_fields("users", FIELDS_USERS).with_includes(include)
 
         # Execute PATCH request
         return await self.api.patch(endpoint, data=user_data, params=query.params)

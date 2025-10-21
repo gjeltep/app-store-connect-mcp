@@ -102,7 +102,11 @@ class UsersHandler(BaseHandler):
             Supported sort: email, -email, lastName, -lastName
             """
             return await self.invitations_api.list_user_invitations(
-                filters=filters, sort=sort, limit=limit, include=include, visible_apps_limit=visible_apps_limit
+                filters=filters,
+                sort=sort,
+                limit=limit,
+                include=include,
+                visible_apps_limit=visible_apps_limit,
             )
 
         @mcp.tool()
@@ -133,7 +137,9 @@ class UsersHandler(BaseHandler):
                 Created user invitation information (expires in ~3 days)
             """
             return await self.invitations_api.create_user_invitation(
-                invitation_data=invitation_data, include=include, visible_apps_limit=visible_apps_limit
+                invitation_data=invitation_data,
+                include=include,
+                visible_apps_limit=visible_apps_limit,
             )
 
         @mcp.tool()
