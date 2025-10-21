@@ -198,6 +198,10 @@ class AppStoreConnectAPI(BaseHTTPClient, APIClient):
             )
         return app_id
 
+    async def patch(self, endpoint: str, data: dict[str, Any] | None = None, params: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Execute PATCH request."""
+        return await self._execute_request("PATCH", endpoint, json=data, params=params)
+
     async def get_url(self, url: str) -> dict[str, Any]:
         """Get a specific URL (for pagination links)."""
         return await self._execute_request("GET", url)

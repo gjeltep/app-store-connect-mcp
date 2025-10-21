@@ -22,6 +22,11 @@ class APIClient(ABC):
         pass
 
     @abstractmethod
+    async def patch(self, endpoint: str, data: dict[str, Any] | None = None, params: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Execute PATCH request."""
+        pass
+
+    @abstractmethod
     async def delete(self, endpoint: str) -> None:
         """Execute DELETE request."""
         pass

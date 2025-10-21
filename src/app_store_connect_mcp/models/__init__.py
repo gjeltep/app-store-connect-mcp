@@ -39,6 +39,15 @@ from app_store_connect_mcp.models.app_store_connect_models import (
     ScmRepositoriesResponse,
     ScmPullRequestsResponse,
     ScmGitReferencesResponse,
+    # Users domain models
+    UsersResponse,
+    UserResponse,
+    User,
+    UserUpdateRequest,
+    UserInvitationsResponse,
+    UserInvitationResponse,
+    UserInvitation,
+    UserInvitationCreateRequest,
 )
 
 __all__ = [
@@ -70,4 +79,12 @@ __all__ = [
     "ScmRepositoriesResponse",
     "ScmPullRequestsResponse",
     "ScmGitReferencesResponse",
+    "UsersResponse",
+    "UserResponse",
+    "User",
+    "UserUpdateRequest",
+    "UserInvitationsResponse",
+    "UserInvitationResponse",
+    "UserInvitation",
+    "UserInvitationCreateRequest",
 ]
