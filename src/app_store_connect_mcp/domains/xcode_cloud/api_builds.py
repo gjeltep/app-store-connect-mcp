@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from typing import Any
 
-from app_store_connect_mcp.core.errors import ValidationError
+from app_store_connect_mcp.core.errors import ResourceNotFoundError, ValidationError
 from app_store_connect_mcp.core.protocols import APIClient
 from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.domains.xcode_cloud.constants import (
@@ -17,6 +17,8 @@ from app_store_connect_mcp.models import (
     CiBuildRunResponse,
     CiBuildRunsResponse,
 )
+
+from . import api_products, api_scm
 
 
 async def list_builds(
@@ -141,16 +143,122 @@ async def _fetch_action_resources(
     }
 
 
-async def start_build(
+async def _resolve_git_reference_id(
     api: APIClient,
     workflow_id: str,
-    source_branch_or_tag: str | None = None,
+    branch_or_tag_name: str,
+) -> str:
+    """Resolve a branch or tag name to its Git reference UUID.
+
+    Resolution chain: workflow_id → repository_id → git_references → match by name
+
+    Args:
+        api: API client instance
+        workflow_id: The workflow ID to resolve references for
+        branch_or_tag_name: The branch or tag name (e.g., "main", "develop", "v1.0.0")
+
+    Returns:
+        The UUID of the matching git reference
+
+    Raises:
+        ValidationError: If the workflow has no associated repository
+        ResourceNotFoundError: If the branch/tag is not found or is deleted
+    """
+    # Step 1: Get workflow with repository relationship
+    workflow_response = await api_products.get_workflow(
+        api=api,
+        workflow_id=workflow_id,
+        include=["repository"],
+    )
+
+    # Step 2: Extract repository ID from included array (JSON:API spec)
+    # When using include=["repository"], the repository is in the "included" array
+    repository_id = None
+    included = workflow_response.get("included") or []
+    for item in included:
+        if item.get("type") == "scmRepositories":
+            repository_id = item.get("id")
+            break
+
+    # Fallback: check relationships if not found in included
+    if not repository_id:
+        workflow_data = workflow_response.get("data") or {}
+        relationships = workflow_data.get("relationships") or {}
+        repository_data = relationships.get("repository") or {}
+        repository_rel = repository_data.get("data") or {}
+        repository_id = repository_rel.get("id")
+
+    if not repository_id:
+        raise ValidationError(
+            "Workflow has no associated repository",
+            details={
+                "workflow_id": workflow_id,
+                "branch_or_tag_name": branch_or_tag_name,
+            },
+            user_message="Cannot resolve branch name: this workflow has no linked repository.",
+        )
+
+    # Step 3: List git references for the repository
+    refs_response = await api_scm.list_git_references(
+        api=api,
+        repository_id=repository_id,
+        limit=200,  # Max supported by API
+    )
+
+    # Step 4: Find matching reference by name
+    references = refs_response.get("data", [])
+
+    for ref in references:
+        attrs = ref.get("attributes", {})
+        ref_name = attrs.get("name")
+        canonical_name = attrs.get("canonicalName")
+        is_deleted = attrs.get("isDeleted", False)
+
+        # Match against both name and canonicalName
+        if ref_name == branch_or_tag_name or canonical_name == branch_or_tag_name:
+            if is_deleted:
+                raise ResourceNotFoundError(
+                    f"Branch/tag '{branch_or_tag_name}' has been deleted",
+                    details={
+                        "branch_or_tag_name": branch_or_tag_name,
+                        "repository_id": repository_id,
+                        "ref_id": ref.get("id"),
+                        "is_deleted": True,
+                    },
+                    user_message=f"The branch or tag '{branch_or_tag_name}' exists but has been deleted.",
+                )
+            return ref.get("id")
+
+    # No match found - provide helpful error with available branches
+    available_refs = [
+        r.get("attributes", {}).get("name")
+        for r in references
+        if not r.get("attributes", {}).get("isDeleted", False)
+    ]
+
+    raise ResourceNotFoundError(
+        f"Branch/tag '{branch_or_tag_name}' not found in repository",
+        details={
+            "branch_or_tag_name": branch_or_tag_name,
+            "repository_id": repository_id,
+            "available_references": available_refs[:20],
+        },
+        user_message=(
+            f"Could not find branch or tag named '{branch_or_tag_name}'. "
+            f"Available: {', '.join(available_refs[:5])}{'...' if len(available_refs) > 5 else ''}"
+        ),
+    )
+
+
+async def _create_build_run(
+    api: APIClient,
+    workflow_id: str,
+    source_ref_id: str | None = None,
     pull_request_number: int | None = None,
 ) -> dict[str, Any]:
-    """Start a new build for a workflow."""
+    """Internal helper to create a build run with a resolved reference ID."""
     endpoint = "/v1/ciBuildRuns"
 
-    # Prepare the request data
     request_data = {
         "data": {
             "type": "ciBuildRuns",
@@ -158,10 +266,9 @@ async def start_build(
         }
     }
 
-    # Add source branch/tag or pull request if specified
-    if source_branch_or_tag:
+    if source_ref_id:
         request_data["data"]["relationships"]["sourceBranchOrTag"] = {
-            "data": {"type": "scmGitReferences", "id": source_branch_or_tag}
+            "data": {"type": "scmGitReferences", "id": source_ref_id}
         }
 
     if pull_request_number:
@@ -169,15 +276,76 @@ async def start_build(
             "data": {"type": "scmPullRequests", "id": str(pull_request_number)}
         }
 
-    # Make the POST request
     response = await api.post(endpoint, data=request_data)
 
-    # Parse with the model if available
     try:
         parsed = CiBuildRunResponse.model_validate(response)
         return parsed.model_dump(mode="json")
     except Exception:
         return response
+
+
+async def start_build(
+    api: APIClient,
+    workflow_id: str,
+    source_branch_or_tag: str | None = None,
+    pull_request_number: int | None = None,
+) -> dict[str, Any]:
+    """Start a new build for a workflow using a branch or tag name.
+
+    Args:
+        api: API client instance
+        workflow_id: The workflow to trigger
+        source_branch_or_tag: Branch or tag name (e.g., "main", "develop", "v1.0.0").
+            Resolved to Git reference ID via API.
+        pull_request_number: Optional pull request number to build
+
+    Returns:
+        The created build run response
+
+    Raises:
+        ResourceNotFoundError: If the specified branch/tag name cannot be found
+        ValidationError: If the workflow has no repository
+    """
+    resolved_ref_id: str | None = None
+    if source_branch_or_tag:
+        resolved_ref_id = await _resolve_git_reference_id(
+            api=api,
+            workflow_id=workflow_id,
+            branch_or_tag_name=source_branch_or_tag,
+        )
+
+    return await _create_build_run(
+        api=api,
+        workflow_id=workflow_id,
+        source_ref_id=resolved_ref_id,
+        pull_request_number=pull_request_number,
+    )
+
+
+async def start_build_by_ref_id(
+    api: APIClient,
+    workflow_id: str,
+    source_ref_id: str | None = None,
+    pull_request_number: int | None = None,
+) -> dict[str, Any]:
+    """Start a new build for a workflow using a Git reference ID directly.
+
+    Args:
+        api: API client instance
+        workflow_id: The workflow to trigger
+        source_ref_id: Git reference UUID (no resolution needed)
+        pull_request_number: Optional pull request number to build
+
+    Returns:
+        The created build run response
+    """
+    return await _create_build_run(
+        api=api,
+        workflow_id=workflow_id,
+        source_ref_id=source_ref_id,
+        pull_request_number=pull_request_number,
+    )
 
 
 async def list_artifacts(
