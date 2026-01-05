@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from app_store_connect_mcp.core.base_handler import BaseHandler
-from app_store_connect_mcp.domains.users.api_users import UsersAPI
 from app_store_connect_mcp.domains.users.api_user_invitations import UserInvitationsAPI
+from app_store_connect_mcp.domains.users.api_users import UsersAPI
 
 if TYPE_CHECKING:
     from mcp.server.fastmcp import FastMCP

@@ -5,8 +5,8 @@ from typing import Any
 from app_store_connect_mcp.core.protocols import APIClient
 from app_store_connect_mcp.core.query_builder import APIQueryBuilder
 from app_store_connect_mcp.models import (
-    UsersResponse,
     UserResponse,
+    UsersResponse,
 )
 
 # Fields available for user responses
