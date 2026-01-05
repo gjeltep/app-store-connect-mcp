@@ -108,11 +108,33 @@ class XcodeCloudHandler(BaseHandler):
             source_branch_or_tag: str | None = None,
             pull_request_number: int | None = None,
         ) -> dict[str, Any]:
-            """[XcodeCloud/Builds] Start a new build for a workflow."""
+            """[XcodeCloud/Builds] Start a new build using a branch or tag name.
+
+            The branch/tag name is resolved to a Git reference ID via the API.
+            For direct ID usage without resolution, use builds_start_by_ref_id.
+            """
             return await api_builds.start_build(
                 api=self.api,
                 workflow_id=workflow_id,
                 source_branch_or_tag=source_branch_or_tag,
+                pull_request_number=pull_request_number,
+            )
+
+        @mcp.tool()
+        async def builds_start_by_ref_id(
+            workflow_id: str,
+            source_ref_id: str | None = None,
+            pull_request_number: int | None = None,
+        ) -> dict[str, Any]:
+            """[XcodeCloud/Builds] Start a new build using a Git reference ID directly.
+
+            Use this when you already have the Git reference UUID to skip resolution.
+            For branch/tag names, use builds_start instead.
+            """
+            return await api_builds.start_build_by_ref_id(
+                api=self.api,
+                workflow_id=workflow_id,
+                source_ref_id=source_ref_id,
                 pull_request_number=pull_request_number,
             )
 

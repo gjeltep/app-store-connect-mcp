@@ -4,10 +4,13 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app_store_connect_mcp.core.errors import ValidationError
+from app_store_connect_mcp.core.errors import ResourceNotFoundError, ValidationError
 from app_store_connect_mcp.domains.xcode_cloud.api_builds import (
     _fetch_action_resources,
+    _resolve_git_reference_id,
     list_builds,
+    start_build,
+    start_build_by_ref_id,
 )
 
 
@@ -200,3 +203,228 @@ class TestFetchActionResources:
         assert result["data"] == []
         assert result["meta"]["total"] == 0
         assert mock_api.get.call_count == 1  # Only the actions call
+
+
+class TestGitReferenceResolution:
+    """Test git reference name to UUID resolution."""
+
+    @pytest.mark.asyncio
+    async def test_resolve_branch_name_success(self):
+        """Test successful branch name resolution."""
+        mock_api = AsyncMock()
+
+        mock_api.get = AsyncMock(
+            side_effect=[
+                # First call: get workflow with repository
+                {
+                    "data": {
+                        "id": "workflow-123",
+                        "type": "ciWorkflows",
+                        "relationships": {
+                            "repository": {"data": {"type": "scmRepositories", "id": "repo-456"}}
+                        },
+                    }
+                },
+                # Second call: list git references
+                {
+                    "data": [
+                        {
+                            "id": "ref-uuid-main",
+                            "type": "scmGitReferences",
+                            "attributes": {
+                                "name": "main",
+                                "canonicalName": "refs/heads/main",
+                                "isDeleted": False,
+                                "kind": "BRANCH",
+                            },
+                        },
+                        {
+                            "id": "ref-uuid-develop",
+                            "type": "scmGitReferences",
+                            "attributes": {
+                                "name": "develop",
+                                "canonicalName": "refs/heads/develop",
+                                "isDeleted": False,
+                                "kind": "BRANCH",
+                            },
+                        },
+                    ]
+                },
+            ]
+        )
+
+        result = await _resolve_git_reference_id(
+            api=mock_api,
+            workflow_id="workflow-123",
+            branch_or_tag_name="main",
+        )
+
+        assert result == "ref-uuid-main"
+
+    @pytest.mark.asyncio
+    async def test_resolve_deleted_branch_raises_error(self):
+        """Test that deleted branches raise ResourceNotFoundError."""
+        mock_api = AsyncMock()
+
+        mock_api.get = AsyncMock(
+            side_effect=[
+                {"data": {"relationships": {"repository": {"data": {"id": "repo-456"}}}}},
+                {
+                    "data": [
+                        {
+                            "id": "ref-uuid-deleted",
+                            "attributes": {
+                                "name": "old-branch",
+                                "isDeleted": True,
+                            },
+                        },
+                    ]
+                },
+            ]
+        )
+
+        with pytest.raises(ResourceNotFoundError) as exc_info:
+            await _resolve_git_reference_id(
+                api=mock_api,
+                workflow_id="workflow-123",
+                branch_or_tag_name="old-branch",
+            )
+
+        assert "has been deleted" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_resolve_nonexistent_branch_raises_error(self):
+        """Test that non-existent branches raise ResourceNotFoundError."""
+        mock_api = AsyncMock()
+
+        mock_api.get = AsyncMock(
+            side_effect=[
+                {"data": {"relationships": {"repository": {"data": {"id": "repo-456"}}}}},
+                {
+                    "data": [
+                        {
+                            "id": "ref-uuid-main",
+                            "attributes": {"name": "main", "isDeleted": False},
+                        },
+                    ]
+                },
+            ]
+        )
+
+        with pytest.raises(ResourceNotFoundError) as exc_info:
+            await _resolve_git_reference_id(
+                api=mock_api,
+                workflow_id="workflow-123",
+                branch_or_tag_name="nonexistent-branch",
+            )
+
+        assert "not found" in str(exc_info.value)
+        assert "main" in str(exc_info.value.details.get("available_references", []))
+
+    @pytest.mark.asyncio
+    async def test_resolve_no_repository_raises_error(self):
+        """Test that workflows without repositories raise ValidationError."""
+        mock_api = AsyncMock()
+
+        mock_api.get = AsyncMock(
+            return_value={
+                "data": {
+                    "id": "workflow-123",
+                    "relationships": {},  # No repository
+                }
+            }
+        )
+
+        with pytest.raises(ValidationError) as exc_info:
+            await _resolve_git_reference_id(
+                api=mock_api,
+                workflow_id="workflow-123",
+                branch_or_tag_name="main",
+            )
+
+        assert "no associated repository" in str(exc_info.value)
+
+
+class TestStartBuildWithResolution:
+    """Test start_build function with branch name resolution."""
+
+    @pytest.mark.asyncio
+    async def test_start_build_resolves_branch_name(self):
+        """Test that start_build resolves branch names via API."""
+        mock_api = AsyncMock()
+
+        mock_api.get = AsyncMock(
+            side_effect=[
+                # Workflow with repository
+                {"data": {"relationships": {"repository": {"data": {"id": "repo-456"}}}}},
+                # Git references
+                {
+                    "data": [
+                        {
+                            "id": "resolved-uuid-123",
+                            "attributes": {"name": "main", "isDeleted": False},
+                        },
+                    ]
+                },
+            ]
+        )
+        mock_api.post = AsyncMock(return_value={"data": {"id": "build-123", "type": "ciBuildRuns"}})
+
+        await start_build(
+            api=mock_api,
+            workflow_id="workflow-123",
+            source_branch_or_tag="main",
+        )
+
+        # Should call GET twice for resolution (workflow + refs)
+        assert mock_api.get.call_count == 2
+
+        # Verify resolved UUID was used in POST
+        mock_api.post.assert_called_once()
+        call_data = mock_api.post.call_args[1]["data"]
+        ref_id = call_data["data"]["relationships"]["sourceBranchOrTag"]["data"]["id"]
+        assert ref_id == "resolved-uuid-123"
+
+    @pytest.mark.asyncio
+    async def test_start_build_without_branch_works(self):
+        """Test that builds without branch specification still work."""
+        mock_api = AsyncMock()
+        mock_api.post = AsyncMock(return_value={"data": {"id": "build-123", "type": "ciBuildRuns"}})
+
+        await start_build(
+            api=mock_api,
+            workflow_id="workflow-123",
+            source_branch_or_tag=None,
+        )
+
+        # Should not call GET (no resolution needed)
+        mock_api.get.assert_not_called()
+
+        # Should not include sourceBranchOrTag in request
+        call_data = mock_api.post.call_args[1]["data"]
+        assert "sourceBranchOrTag" not in call_data["data"]["relationships"]
+
+
+class TestStartBuildByRefId:
+    """Test start_build_by_ref_id function (no resolution)."""
+
+    @pytest.mark.asyncio
+    async def test_start_build_by_ref_id_uses_id_directly(self):
+        """Test that start_build_by_ref_id uses the ID without resolution."""
+        mock_api = AsyncMock()
+        mock_api.post = AsyncMock(return_value={"data": {"id": "build-123", "type": "ciBuildRuns"}})
+
+        await start_build_by_ref_id(
+            api=mock_api,
+            workflow_id="workflow-123",
+            source_ref_id="a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        )
+
+        # Should NOT call GET - ID used directly
+        mock_api.get.assert_not_called()
+
+        # Verify ID was passed through to POST
+        mock_api.post.assert_called_once()
+        call_data = mock_api.post.call_args[1]["data"]
+        ref_id = call_data["data"]["relationships"]["sourceBranchOrTag"]["data"]["id"]
+        assert ref_id == "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
